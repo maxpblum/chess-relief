@@ -1,0 +1,7 @@
+#load "util.cmo";;
+#load "rank.cmo";;
+#load "piece.cmo";;
+#load "color.cmo";;
+#load "space.cmo";;
+#load "board.cmo";;
+#load "GameState.cmo";;

@@ -1,0 +1,6 @@
+*.cm*
+*.o
+*.un~
+*.swp
+*.out
+run_chess
