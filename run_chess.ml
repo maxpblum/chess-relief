@@ -29,6 +29,10 @@ let parse_move move_str =
     )
 
 let rec play_game (state : GameState.t) =
+    match GameState.game_ended state with
+    | Checkmate winner -> print_endline (String.concat "" [(Color.to_string winner); " wins!"])
+    | Stalemate -> print_endline "Stalemate!"
+    | Ongoing ->
     let {board;turn} : GameState.t = state in
     let () = Board.print board in
     let () = String.concat "" [(Color.to_string turn); " to move"] |> print_endline in
