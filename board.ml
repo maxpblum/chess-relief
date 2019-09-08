@@ -74,3 +74,6 @@ let make_move move board : t =
 
 let move_of_delta {rows;cols} from =
     {from;destination={row=from.row+rows;col=from.col+cols}}
+
+type occupied_space_t = {location:location_t;color:Color.t;rank:Rank.t}
+let create (_ : occupied_space_t list) = (initial : t)
