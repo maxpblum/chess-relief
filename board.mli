@@ -7,7 +7,6 @@ type legal_move_t = {
     new_board : t ;
 }
 
-val castling_test : t
 val get_value_at : location_t -> t -> Space.t
 val make_move : move_t -> t -> t
 val set_location : location_t -> Space.t -> t -> t

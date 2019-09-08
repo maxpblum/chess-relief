@@ -192,9 +192,6 @@ type attempted_move_t =
     | Legal   of complete_move_t
 
 let initial = {board=Board.initial;turn=White}
-(*
-let initial = {board=Board.castling_test;turn=White}
-*)
 
 let blocked_by_color board match_color spot =
     match Board.get_value_at spot board with

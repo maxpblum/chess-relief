@@ -17,16 +17,6 @@ let rows : Space.t list list = List.concat [
 ]
 let row_arrays : Space.t array list = List.map Array.of_list rows
 let initial : t = Array.of_list row_arrays
-let castling_test : t = Array.of_list [
-    Array.of_list [None; None; None; None; Some Piece.{rank=Rank.(King false);color=Color.White}; None; None; Some {rank=Rank.(Rook false);color=Color.White};];
-    Array.of_list [None; None; None; None; None; None; None; None;];
-    Array.of_list [None; None; None; None; None; None; None; None;];
-    Array.of_list [None; None; None; None; None; None; None; None;];
-    Array.of_list [None; None; None; None; None; None; None; None;];
-    Array.of_list [None; None; None; None; None; None; None; None;];
-    Array.of_list [None; None; None; None; None; None; None; None;];
-    Array.of_list [None; None; None; None; None; Some Piece.{rank=Rank.Queen;color=Color.Black}; None; None;];
-]
 
 let set_location location value board : t =
     let new_board = Array.copy board in
