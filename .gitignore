@@ -3,4 +3,7 @@
 *.un~
 *.swp
 *.out
+*.cache
+*.log
 run_chess
+run_tests
