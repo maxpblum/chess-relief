@@ -28,25 +28,6 @@ let castling_test : t = Array.of_list [
     Array.of_list [None; None; None; None; None; Some Piece.{rank=Rank.Queen;color=Color.Black}; None; None;];
 ]
 
-let space_string row col =
-    let background =
-        let open Color in
-        if (row + col) mod 2 = 0
-        then Black
-        else White
-    in Space.to_string background
-
-let row_of_strings idx = Array.mapi (space_string idx)
-let row_strings = Array.mapi row_of_strings
-let print_row_of_strings (row : string array) : unit =
-    row |> Array.to_list |> String.concat "" |> print_endline
-
-let reset_background = "\027[0m"
-
-let print board =
-    let () = board |> row_strings |> Util.iterate_array_backwards print_row_of_strings in
-    print_string reset_background
-
 let set_location location value board : t =
     let new_board = Array.copy board in
     let row_array = Array.get new_board location.row in
@@ -100,6 +81,27 @@ let rec all_pieces_of_color_impl color board idx =
 
 let all_pieces_of_color color board =
     all_pieces_of_color_impl color board 0 |> List.concat
+
+let rec fill_row_array_from_board row_idx col_idx board (row_array : Space.t array) =
+    if col_idx > 7
+    then ()
+    else
+    let () = Array.set row_array col_idx (get_value_at {row=row_idx;col=col_idx} board) in
+    fill_row_array_from_board row_idx (col_idx+1) board row_array
+
+let rec fill_matrix_from_board row_idx board matrix =
+    if row_idx > 7
+    then ()
+    else
+    let new_row = Array.make 8 None in
+    let () = fill_row_array_from_board row_idx 0 board new_row in
+    let () = Array.set matrix row_idx new_row in
+    fill_matrix_from_board (row_idx+1) board matrix
+
+let to_matrix board =
+    let matrix = Array.make 8 (Array.make 8 None) in
+    let () = fill_matrix_from_board 0 board matrix in
+    matrix
 
 type occupied_space_t = {location:location_t;color:Color.t;rank:Rank.t}
 let create (_ : occupied_space_t list) = (initial : t)

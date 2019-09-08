@@ -28,13 +28,33 @@ let parse_move move_str =
 
     )
 
+let space_string invert row col =
+    let remainder = if invert then 1 else 0 in
+    let background =
+        let open Color in
+        if (row + col) mod 2 = remainder
+        then Black
+        else White
+    in Space.to_string background
+
+let row_of_strings invert idx = Array.mapi (space_string invert idx)
+let row_strings invert = Array.mapi (row_of_strings invert)
+let print_row_of_strings (row : string array) : unit =
+    row |> Array.to_list |> String.concat "" |> print_endline
+
+let reset_background = "\027[0m"
+
+let print_board invert board =
+    let () = board |> row_strings invert  |> Util.iterate_array_backwards print_row_of_strings in
+    print_string reset_background
+
 let rec play_game (state : GameState.t) =
     match GameState.game_ended state with
     | Checkmate winner -> print_endline (String.concat "" [(Color.to_string winner); " wins!"])
     | Stalemate -> print_endline "Stalemate!"
     | Ongoing ->
     let {board;turn} : GameState.t = state in
-    let () = Board.print board in
+    let () = print_board false (Board.to_matrix board) in
     let () = String.concat "" [(Color.to_string turn); " to move"] |> print_endline in
     let () = print_string "Enter a move: " in
     let parsed_move = read_line () |> parse_move in

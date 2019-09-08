@@ -8,7 +8,6 @@ type legal_move_t = {
 }
 
 val castling_test : t
-val print : t -> unit
 val get_value_at : location_t -> t -> Space.t
 val make_move : move_t -> t -> t
 val set_location : location_t -> Space.t -> t -> t
@@ -18,6 +17,8 @@ val move_of_delta : delta_t -> location_t -> move_t
 type occupied_space_t = {location:location_t;color:Color.t;rank:Rank.t}
 val create : occupied_space_t list -> t
 val initial : t
+
+val to_matrix : t -> Space.t array array
 
 type piece_on_board_t = {piece : Piece.t ; location : location_t}
 val all_pieces_of_color : Color.t -> t -> piece_on_board_t list
