@@ -293,3 +293,21 @@ let attempt_move move {board;turn} =
                     if is_in_check turn board
                     then Illegal MovingIntoCheck
                     else Legal {move;new_state={board;turn=Color.opposite turn}}
+
+type game_ended_t =
+    | Ongoing
+    | Checkmate of Color.t
+    | Stalemate
+
+let has_actual_legal_moves board turn =
+    let possible_moves = legal_moves_for_color turn board in
+    let move_actually_legal Board.{move} = match attempt_move move {board;turn} with
+    | Legal _ -> true
+    | _ -> false in
+    List.length (List.map move_actually_legal possible_moves) > 0
+
+let game_ended {board;turn} =
+    if is_in_check turn board then Checkmate Color.(opposite turn)
+    (* TODO: Implement repeated-moves stalemate *)
+    else if has_actual_legal_moves board turn then Ongoing
+    else Stalemate
