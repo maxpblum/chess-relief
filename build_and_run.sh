@@ -1,14 +1,15 @@
 #!/bin/bash
 
-modules_with_sigs=("color" "rank" "piece" "space" "util" "board" "IllegalMoveReason" "GameState")
-modules_without_sigs=("run_chess")
-for m in ${modules_with_sigs[@]}; do
-    echo "Building module " $m;
-    ocamlopt -c $m.mli $m.ml;
-done
-for m in ${modules_without_sigs[@]}; do
-    echo "Building module " $m;
-    ocamlopt -c $m.ml;
-done
-ocamlopt -o run_chess ${modules_with_sigs[@]/%/.cmx} ${modules_without_sigs[@]/%/.cmx}
+ocamlfind ocamlopt -o run_chess \
+    -linkpkg -package oUnit \
+    color.mli color.ml \
+    rank.mli rank.ml \
+    piece.mli piece.ml \
+    space.mli space.ml \
+    util.mli util.ml \
+    board.mli board.ml \
+    IllegalMoveReason.mli IllegalMoveReason.ml \
+    GameState.mli GameState.ml \
+    run_chess.ml
+
 ./run_chess
