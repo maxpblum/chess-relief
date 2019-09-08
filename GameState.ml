@@ -201,35 +201,9 @@ let blocked_by_color board match_color spot =
     | None -> false
     | Some Board.{color;rank} -> color = match_color
 
-type piece_in_row_t = {piece : Piece.t ; idx : int}
-
-let rec all_pieces_of_color_from_row_impl color row idx =
-    if idx = 8 then [] else
-    let rest_of_row = all_pieces_of_color_from_row_impl color row (idx+1) in
-    match Array.get row idx with
-    | None -> rest_of_row
-    | Some piece ->
-            let Piece.{color=piece_color} = piece in
-            if piece_color = color
-            then {piece;idx} :: rest_of_row
-            else rest_of_row
-
-let all_pieces_of_color_from_row color row = all_pieces_of_color_from_row_impl color row 0
-
-type piece_on_board_t = {piece : Piece.t ; location : Board.location_t}
-
-let rec all_pieces_of_color_impl color board idx =
-    if idx = 8 then [] else
-    let rest_of_board = all_pieces_of_color_impl color board (idx+1) in
-    let pieces_in_row = all_pieces_of_color_from_row color (Array.get board idx) in
-    (List.map (fun {piece;idx=col} -> {piece;location={row=idx;col}}) pieces_in_row) :: rest_of_board
-
-let all_pieces_of_color color board =
-    all_pieces_of_color_impl color board 0 |> List.concat
-
-let legal_moves_for_color color board : Board.legal_move_t list =
-    all_pieces_of_color color board |>
-    List.map (fun {piece;location=from} -> legal_moves board piece from) |>
+let legal_moves_for_color color (board : Board.t) : Board.legal_move_t list =
+    Board.all_pieces_of_color color board |>
+    List.map (fun Board.{piece;location=from} -> legal_moves board piece from) |>
     List.concat
 
 let threats_to_spot_from_color color board spot =
@@ -237,11 +211,11 @@ let threats_to_spot_from_color color board spot =
     List.filter (fun Board.{move={destination}} -> spot=destination)
 
 let king_location (color : Color.t) board =
-    let is_king {piece={rank}} = match rank with
+    let is_king Board.{piece={rank}} = match rank with
     | King _ -> true
     | _ -> false
     in
-    match (all_pieces_of_color color board |> List.filter is_king) with
+    match (Board.all_pieces_of_color color board |> List.filter is_king) with
     (* This shouldn't happen *)
     | [] -> None
     | {location} :: _ -> Some location

@@ -43,7 +43,7 @@ let print_row_of_strings (row : string array) : unit =
 
 let reset_background = "\027[0m"
 
-let print (board : t) =
+let print board =
     let () = board |> row_strings |> Util.iterate_array_backwards print_row_of_strings in
     print_string reset_background
 
@@ -74,6 +74,32 @@ let make_move move board : t =
 
 let move_of_delta {rows;cols} from =
     {from;destination={row=from.row+rows;col=from.col+cols}}
+
+type piece_in_row_t = {piece : Piece.t ; idx : int}
+
+let rec all_pieces_of_color_from_row_impl color row idx =
+    if idx = 8 then [] else
+    let rest_of_row = all_pieces_of_color_from_row_impl color row (idx+1) in
+    match Array.get row idx with
+    | None -> rest_of_row
+    | Some piece ->
+            let Piece.{color=piece_color} = piece in
+            if piece_color = color
+            then {piece;idx} :: rest_of_row
+            else rest_of_row
+
+let all_pieces_of_color_from_row color row = all_pieces_of_color_from_row_impl color row 0
+
+type piece_on_board_t = {piece : Piece.t ; location : location_t}
+
+let rec all_pieces_of_color_impl color board idx =
+    if idx = 8 then [] else
+    let rest_of_board = all_pieces_of_color_impl color board (idx+1) in
+    let pieces_in_row = all_pieces_of_color_from_row color (Array.get board idx) in
+    (List.map (fun {piece;idx=col} -> {piece;location={row=idx;col}}) pieces_in_row) :: rest_of_board
+
+let all_pieces_of_color color board =
+    all_pieces_of_color_impl color board 0 |> List.concat
 
 type occupied_space_t = {location:location_t;color:Color.t;rank:Rank.t}
 let create (_ : occupied_space_t list) = (initial : t)
