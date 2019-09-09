@@ -9,3 +9,4 @@ run_chess
 run_tests
 TestOctet
 _build/
+*.native

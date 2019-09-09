@@ -1,1 +1,5 @@
 PKG oUnit
+S src
+S tests
+B src
+B tests

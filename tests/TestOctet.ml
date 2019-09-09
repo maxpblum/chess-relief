@@ -48,7 +48,3 @@ let suite =
   "test to_list and set">:: test_to_list_and_set;
  ]
 ;;
-
-let () =
-  run_test_tt_main suite
-;;
