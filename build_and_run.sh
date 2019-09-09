@@ -2,6 +2,7 @@
 
 ocamlfind ocamlopt -o run_chess \
     -linkpkg -package oUnit \
+    octet.mli octet.ml \
     color.mli color.ml \
     rank.mli rank.ml \
     piece.mli piece.ml \

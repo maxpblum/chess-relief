@@ -1,4 +1,4 @@
-type t = Space.t array array
+type t = Space.t Octet.t Octet.t
 type delta_t = {rows:int ; cols:int}
 type location_t = {row:int ; col:int}
 type move_t = {from:location_t ; destination:location_t}
@@ -8,12 +8,12 @@ type legal_move_t = {
 }
 
 let set_location location value board : t =
-    let new_board = Array.copy board in
-    let row_array = Array.get new_board location.row in
-    let new_row_array = Array.copy row_array in
-    (Array.set new_row_array location.col value;
-     Array.set new_board location.row new_row_array;
-     new_board)
+    match Octet.get location.row board with
+    (* Shouldn't happen if location is valid *)
+    | None -> board
+    | Some old_row ->
+            let new_row = Octet.set location.col value old_row
+            in Octet.set location.row new_row board
 
 let is_on_board {row; col} =
     0 <= row &&
@@ -22,11 +22,11 @@ let is_on_board {row; col} =
     col <= 7
 
 let get_value_at location board : Space.t =
-    if not (location |> is_on_board)
-    then None
-    else
-    let row_array = Array.get board location.row in
-    Array.get row_array location.col
+    match Octet.get location.row board with
+    | None -> None
+    | Some row -> match Octet.get location.col row with
+    | None -> None
+    | Some space -> space
 
 let make_move move board : t =
     let piece = get_value_at move.from board in
@@ -35,31 +35,25 @@ let make_move move board : t =
 let move_of_delta {rows;cols} from =
     {from;destination={row=from.row+rows;col=from.col+cols}}
 
-type piece_in_row_t = {piece : Piece.t ; idx : int}
+let rec fold_impl combine accum board location =
+    if location.row > 7 then accum
+    else if location.col > 7 then fold_impl combine accum board {row=location.row+1;col=0}
+    else
+        let new_accum = combine accum (get_value_at location board) location in
+        fold_impl combine new_accum board {location with col=location.col+1}
 
-let rec all_pieces_of_color_from_row_impl color row idx =
-    if idx = 8 then [] else
-    let rest_of_row = all_pieces_of_color_from_row_impl color row (idx+1) in
-    match Array.get row idx with
-    | None -> rest_of_row
-    | Some piece ->
-            let Piece.{color=piece_color} = piece in
-            if piece_color = color
-            then {piece;idx} :: rest_of_row
-            else rest_of_row
-
-let all_pieces_of_color_from_row color row = all_pieces_of_color_from_row_impl color row 0
+let fold combine initial board = fold_impl combine initial board {row=0;col=0}
 
 type piece_on_board_t = {piece : Piece.t ; location : location_t}
 
-let rec all_pieces_of_color_impl color board idx =
-    if idx = 8 then [] else
-    let rest_of_board = all_pieces_of_color_impl color board (idx+1) in
-    let pieces_in_row = all_pieces_of_color_from_row color (Array.get board idx) in
-    (List.map (fun {piece;idx=col} -> {piece;location={row=idx;col}}) pieces_in_row) :: rest_of_board
-
-let all_pieces_of_color color board =
-    all_pieces_of_color_impl color board 0 |> List.concat
+let all_pieces_of_color color =
+    let combine pieces space location = match space with
+    | None -> pieces
+    | Some piece ->
+            if Piece.(piece.color) = color
+            then {piece;location} :: pieces
+            else pieces
+    in fold combine []
 
 let rec fill_row_array_from_board row_idx col_idx board (row_array : Space.t array) =
     if col_idx > 7
@@ -82,7 +76,7 @@ let to_matrix board =
     let () = fill_matrix_from_board 0 board matrix in
     matrix
 
-let empty : t = Array.make 8 (Array.make 8 None)
+let empty = Octet.init (Octet.init None)
 
 type occupied_space_t = {location:location_t;color:Color.t;rank:Rank.t}
 
@@ -90,7 +84,7 @@ let rec create_impl board = function
     | [] -> board
     | {location;color;rank} :: ps ->
             let new_board = board |>
-                set_location location (Some (Piece.piece color rank))
+                set_location location Piece.(Some {color;rank})
             in create_impl new_board ps
 
 let create = create_impl empty

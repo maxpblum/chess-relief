@@ -45,7 +45,7 @@ let print_row_of_strings (row : string array) : unit =
 let reset_background = "\027[0m"
 
 let print_board invert board =
-    let () = board |> row_strings invert  |> Util.iterate_array_backwards print_row_of_strings in
+    let () = board |> row_strings invert |> Util.iterate_array_backwards print_row_of_strings in
     print_string reset_background
 
 let rec play_game (state : GameState.t) =
