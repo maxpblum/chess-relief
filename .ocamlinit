@@ -1,7 +1,10 @@
+#load "Octet.cmo";;
 #load "util.cmo";;
 #load "rank.cmo";;
 #load "piece.cmo";;
 #load "color.cmo";;
 #load "space.cmo";;
 #load "board.cmo";;
+#load "IllegalMoveReason.cmo";;
 #load "GameState.cmo";;
+#load "run_chess.cmo";;
