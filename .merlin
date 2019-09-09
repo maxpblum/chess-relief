@@ -1,5 +1,5 @@
 PKG oUnit
 S src
 S tests
-B src
-B tests
+B _build/src
+B _build/tests

@@ -1,1 +1,1 @@
-ocamlbuild -I src/ run_chess.native && ./run_chess.native
+ocamlbuild -I src/ Run.native && ./Run.native

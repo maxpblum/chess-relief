@@ -1,4 +1,4 @@
-let spot_blocked spot board = match (Board.get_value_at spot board : Space.t) with
+let spot_blocked spot board = match (Board.get_value_at spot board : Board.space_t) with
 | None -> false
 | Some _ -> true
 
@@ -85,14 +85,14 @@ let legal_queen_moves board color from : Board.legal_move_t list =
 
 let legal_rook_moves board color from : Board.legal_move_t list = (
     (* Install a "moved" rook in the "from" position. *)
-    let moved_rook = Some Piece.({color;rank=(Rank.(Rook true))}) in
+    let moved_rook = Some Board.({color;rank=(Rank.(Rook true))}) in
     let updated_board = Board.set_location from moved_rook board in
     straight_moves from updated_board
 )
 
 let basic_king_moves board color from : Board.legal_move_t list=
     (* Install a "moved" king in the "from" position. *)
-    let moved_king = Some Piece.({color;rank=(Rank.(King true))}) in
+    let moved_king = Some Board.({color;rank=(Rank.(King true))}) in
     let updated_board = Board.set_location from moved_king board in
     List.concat [diagonal_units ; straight_units] |>
     List.map delta_of_tuple |>
@@ -124,7 +124,7 @@ let castling_right_data : castling_data_t = {
 let castle_move board color king_row castling_data : Board.legal_move_t option =
     let king_col = 4 in
     let {rook_col;new_rook_col;new_king_col;between_cols} = castling_data in
-    let unmoved_rook = Some Piece.{rank=Rank.(Rook false);color} in
+    let unmoved_rook = Some Board.{rank=Rank.(Rook false);color} in
     let rook_spot = Board.{row=king_row;col=rook_col} in
     let rook_okay = (Board.get_value_at rook_spot board = unmoved_rook) in
     if (not rook_okay) then None else
@@ -163,7 +163,7 @@ let legal_king_moves board color from moved : Board.legal_move_t list =
         castle_moves board color from moved ;
     ]
 
-let legal_moves board ({color; rank} : Piece.t) from : Board.legal_move_t list = match rank with
+let legal_moves board ({color; rank} : Board.piece_t) from : Board.legal_move_t list = match rank with
     | Pawn -> legal_pawn_moves board color from
     | Knight -> legal_knight_moves board color from
     | Bishop -> legal_bishop_moves board color from
@@ -232,7 +232,7 @@ let attempt_move move {board;turn} =
     match Board.get_value_at Board.(move.from) board with
     | None -> Illegal FromEmpty
     | Some piece ->
-            let ({color=from_color;rank=from_rank} : Piece.t) = piece in
+            let ({color=from_color;rank=from_rank} : Board.piece_t) = piece in
             if from_color != turn
             then Illegal WrongColor
             else if not (Board.is_on_board move.destination)

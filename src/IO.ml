@@ -28,6 +28,18 @@ let parse_move move_str =
 
     )
 
+let string_of_space background : Board.space_t -> string =
+    let background_string = Color.set_background background in
+    function
+        | None -> String.concat "" [background_string; "   "]
+        | Some Board.{color; rank} ->
+                let stringifier = (
+                    if color = background
+                    then Rank.to_string_in_background_color
+                    else Rank.to_string_in_non_background_color
+                ) in
+                String.concat "" [background_string; " "; stringifier rank; " "]
+
 let space_string invert row col =
     let remainder = if invert then 1 else 0 in
     let background =
@@ -35,7 +47,7 @@ let space_string invert row col =
         if (row + col) mod 2 = remainder
         then Black
         else White
-    in Space.to_string background
+    in string_of_space background
 
 let row_of_strings invert idx = Array.mapi (space_string invert idx)
 let row_strings invert = Array.mapi (row_of_strings invert)
@@ -68,6 +80,3 @@ let rec play_game (state : GameState.t) =
             let () = IllegalMoveReason.to_string reason |> print_endline in
             play_game state)
         | Legal {move;new_state} -> play_game new_state
-;;
-
-play_game GameState.initial

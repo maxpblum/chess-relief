@@ -1,4 +1,9 @@
-type t = Space.t Octet.t Octet.t
+type piece_t = {
+    color : Color.t ;
+    rank  : Rank.t ;
+}
+type space_t = piece_t option
+type t = space_t Octet.t Octet.t
 type delta_t = {rows:int ; cols:int}
 type location_t = {row:int ; col:int}
 type move_t = {from:location_t ; destination:location_t}
@@ -21,7 +26,7 @@ let is_on_board {row; col} =
     0 <= col &&
     col <= 7
 
-let get_value_at location board : Space.t =
+let get_value_at location board : space_t =
     match Octet.get location.row board with
     | None -> None
     | Some row -> match Octet.get location.col row with
@@ -44,18 +49,18 @@ let rec fold_impl combine accum board location =
 
 let fold combine initial board = fold_impl combine initial board {row=0;col=0}
 
-type piece_on_board_t = {piece : Piece.t ; location : location_t}
+type piece_on_board_t = {piece : piece_t ; location : location_t}
 
 let all_pieces_of_color color =
     let combine pieces space location = match space with
     | None -> pieces
     | Some piece ->
-            if Piece.(piece.color) = color
+            if (piece.color) = color
             then {piece;location} :: pieces
             else pieces
     in fold combine []
 
-let rec fill_row_array_from_board row_idx col_idx board (row_array : Space.t array) =
+let rec fill_row_array_from_board row_idx col_idx board (row_array : space_t array) =
     if col_idx > 7
     then ()
     else
@@ -84,7 +89,7 @@ let rec create_impl board = function
     | [] -> board
     | {location;color;rank} :: ps ->
             let new_board = board |>
-                set_location location Piece.(Some {color;rank})
+                set_location location (Some {color;rank})
             in create_impl new_board ps
 
 let create = create_impl empty
