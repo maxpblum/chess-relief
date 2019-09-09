@@ -1,1 +1,8 @@
-ocamlfind ocamlopt -o TestOctet -linkpkg -package oUnit Octet.mli Octet.ml TestOctet.ml && ./TestOctet
+ocamlfind ocamlopt \
+    -o ./build/TestOctet \
+    -I ./src/ \
+    -linkpkg \
+    -package oUnit \
+    ./src/Octet.mli ./src/Octet.ml \
+    ./tests/TestOctet.ml \
+    && ./build/TestOctet

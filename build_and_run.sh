@@ -1,16 +1,17 @@
 #!/bin/bash
 
-ocamlfind ocamlopt -o run_chess \
+ocamlfind ocamlopt -o ./build/run_chess \
+    -I ./src/ \
     -linkpkg -package oUnit \
-    octet.mli octet.ml \
-    color.mli color.ml \
-    rank.mli rank.ml \
-    piece.mli piece.ml \
-    space.mli space.ml \
-    util.mli util.ml \
-    board.mli board.ml \
-    IllegalMoveReason.mli IllegalMoveReason.ml \
-    GameState.mli GameState.ml \
-    run_chess.ml
+    ./src/octet.mli ./src/octet.ml \
+    ./src/color.mli ./src/color.ml \
+    ./src/rank.mli ./src/rank.ml \
+    ./src/piece.mli ./src/piece.ml \
+    ./src/space.mli ./src/space.ml \
+    ./src/util.mli ./src/util.ml \
+    ./src/board.mli ./src/board.ml \
+    ./src/IllegalMoveReason.mli ./src/IllegalMoveReason.ml \
+    ./src/GameState.mli ./src/GameState.ml \
+    ./src/run_chess.ml
 
-./run_chess
+./build/run_chess
