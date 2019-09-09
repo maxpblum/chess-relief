@@ -17,7 +17,11 @@ type occupied_space_t = {location:location_t;color:Color.t;rank:Rank.t}
 val create : occupied_space_t list -> t
 val initial : t
 
+type occupied_space_shorthand_t = int*int*Color.t*Rank.t
+val occupied_space_of_shorthand : occupied_space_shorthand_t -> occupied_space_t
+
 val to_matrix : t -> Space.t array array
 
 type piece_on_board_t = {piece : Piece.t ; location : location_t}
 val all_pieces_of_color : Color.t -> t -> piece_on_board_t list
+

@@ -7,17 +7,6 @@ type legal_move_t = {
     new_board : t ;
 }
 
-let back_order = Rank.[Rook false; Knight; Bishop; Queen; King false; Bishop; Knight; Rook false]
-let front_order = Util.repeat_times Rank.Pawn 8
-let apply_color color = List.map (fun rank -> Some (Piece.piece color rank))
-let rows : Space.t list list = List.concat [
-    [apply_color White back_order; apply_color White front_order];
-    Util.repeat_times (Util.repeat_times None 8) 4;
-    [apply_color Black front_order; apply_color Black back_order]
-]
-let row_arrays : Space.t array list = List.map Array.of_list rows
-let initial : t = Array.of_list row_arrays
-
 let set_location location value board : t =
     let new_board = Array.copy board in
     let row_array = Array.get new_board location.row in
@@ -93,5 +82,55 @@ let to_matrix board =
     let () = fill_matrix_from_board 0 board matrix in
     matrix
 
+let empty : t = Array.make 8 (Array.make 8 None)
+
 type occupied_space_t = {location:location_t;color:Color.t;rank:Rank.t}
-let create (_ : occupied_space_t list) = (initial : t)
+
+let rec create_impl board = function
+    | [] -> board
+    | {location;color;rank} :: ps ->
+            let new_board = board |>
+                set_location location (Some (Piece.piece color rank))
+            in create_impl new_board ps
+
+let create = create_impl empty
+
+type occupied_space_shorthand_t = int*int*Color.t*Rank.t
+
+let occupied_space_of_shorthand (row,col,color,rank) = {location={row;col};color;rank}
+
+let initial =
+    Color.(Rank.[
+        (0,0,White,Rook false);
+        (0,1,White,Knight);
+        (0,2,White,Bishop);
+        (0,3,White,Queen);
+        (0,4,White,King false);
+        (0,5,White,Bishop);
+        (0,6,White,Knight);
+        (0,7,White,Rook false);
+        (1,0,White,Pawn);
+        (1,1,White,Pawn);
+        (1,2,White,Pawn);
+        (1,3,White,Pawn);
+        (1,4,White,Pawn);
+        (1,5,White,Pawn);
+        (1,6,White,Pawn);
+        (1,7,White,Pawn);
+        (6,0,Black,Pawn);
+        (6,1,Black,Pawn);
+        (6,2,Black,Pawn);
+        (6,3,Black,Pawn);
+        (6,4,Black,Pawn);
+        (6,5,Black,Pawn);
+        (6,6,Black,Pawn);
+        (6,7,Black,Pawn);
+        (7,0,Black,Rook false);
+        (7,1,Black,Knight);
+        (7,2,Black,Bishop);
+        (7,3,Black,Queen);
+        (7,4,Black,King false);
+        (7,5,Black,Bishop);
+        (7,6,Black,Knight);
+        (7,7,Black,Rook false);
+    ]) |> List.map occupied_space_of_shorthand |> create
