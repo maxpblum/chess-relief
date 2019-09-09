@@ -28,37 +28,52 @@ let parse_move move_str =
 
     )
 
-let string_of_space background : Board.space_t -> string =
-    let background_string = Color.set_background background in
-    function
-        | None -> String.concat "" [background_string; "   "]
-        | Some Board.{color; rank} ->
-                let stringifier = (
-                    if color = background
-                    then Rank.to_string_in_background_color
-                    else Rank.to_string_in_non_background_color
-                ) in
-                String.concat "" [background_string; " "; stringifier rank; " "]
+let int_of_bool = function
+    | true -> 1
+    | false -> 0
 
-let space_string invert row col =
+let xor a b = (
+        [a; b] |> List.map int_of_bool |> List.fold_left (+) 0
+    ) mod 2 = 1
+
+let string_of_space invert row col (space : Board.space_t) =
     let remainder = if invert then 1 else 0 in
     let background =
         let open Color in
         if (row + col) mod 2 = remainder
         then Black
         else White
-    in string_of_space background
+    in
+    let background_string = Color.set_background background in
+    match space with
+        | None -> String.concat "" [background_string; "   "]
+        | Some Board.{color; rank} ->
+                let stringifier = (
+                    if xor (color = background) invert
+                    then Rank.to_string_in_background_color
+                    else Rank.to_string_in_non_background_color
+                ) in
+                String.concat "" [background_string; " "; stringifier rank; " "]
 
-let row_of_strings invert idx = Array.mapi (space_string invert idx)
-let row_strings invert = Array.mapi (row_of_strings invert)
-let print_row_of_strings (row : string array) : unit =
-    row |> Array.to_list |> String.concat "" |> print_endline
+let rec one_row_strings_list_impl invert row col accum board =
+    if col<0 then accum else
+    let space = Board.(get_value_at {row;col} board) in
+    let space_string = string_of_space invert row col space in
+    one_row_strings_list_impl invert row (col-1) (space_string :: accum) board
+
+let one_row_string invert row board =
+    one_row_strings_list_impl invert row 7 [] board |> String.concat ""
+
+let rec row_strings_list_impl invert row accum board =
+    if row>7 then accum else
+    let row_string = one_row_string invert row board in
+    row_strings_list_impl invert (row+1) (row_string :: accum) board
 
 let reset_background = "\027[0m"
 
-let print_board invert board =
-    let () = board |> row_strings invert |> Util.iterate_array_backwards print_row_of_strings in
-    print_string reset_background
+let string_of_board invert board =
+    row_strings_list_impl invert 0 [reset_background] board |>
+    String.concat "\n"
 
 let rec play_game (state : GameState.t) =
     match GameState.game_ended state with
@@ -66,7 +81,7 @@ let rec play_game (state : GameState.t) =
     | Stalemate -> print_endline "Stalemate!"
     | Ongoing ->
     let {board;turn} : GameState.t = state in
-    let () = print_board false (Board.to_matrix board) in
+    let () = print_string (string_of_board false board) in
     let () = String.concat "" [(Color.to_string turn); " to move"] |> print_endline in
     let () = print_string "Enter a move: " in
     let parsed_move = read_line () |> parse_move in
