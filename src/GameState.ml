@@ -83,17 +83,24 @@ let legal_bishop_moves board color from : Board.legal_move_t list =
 let legal_queen_moves board color from : Board.legal_move_t list =
     List.concat [diagonal_moves from board ; straight_moves from board]
 
-let legal_rook_moves board color from : Board.legal_move_t list = (
-    (* Install a "moved" rook in the "from" position. *)
-    let moved_rook = Some Board.({color;rank=(Rank.(Rook true))}) in
-    let updated_board = Board.set_location from moved_rook board in
-    straight_moves from updated_board
-)
+let mark_moved location board =
+    let open Board in (
+        let new_piece = match get_value_at location board with
+        | None -> None
+        | Some {color;rank} -> (
+            match rank with
+            | Rook _ -> Some {color;rank=Rook true}
+            | King _ -> Some {color;rank=King true}
+            | r -> Some {color;rank=r}
+        ) in
+        set_location location new_piece board
+    )
+
+let legal_rook_moves board color from : Board.legal_move_t list =
+    mark_moved from board |> straight_moves from
 
 let basic_king_moves board color from : Board.legal_move_t list=
-    (* Install a "moved" king in the "from" position. *)
-    let moved_king = Some Board.({color;rank=(Rank.(King true))}) in
-    let updated_board = Board.set_location from moved_king board in
+    let updated_board = mark_moved from board in
     List.concat [diagonal_units ; straight_units] |>
     List.map delta_of_tuple |>
     List.map (fun delta -> Board.move_of_delta delta from) |>
@@ -122,23 +129,36 @@ let castling_right_data : castling_data_t = {
 }
 
 let castle_move board color king_row castling_data : Board.legal_move_t option =
+    (* The king always starts in column 4 if unmoved, which it has to be *)
     let king_col = 4 in
+
+    (* Unpack the relative move data for the specific castling variant *)
     let {rook_col;new_rook_col;new_king_col;between_cols} = castling_data in
+
+    (* Check if the rook is clean *)
     let unmoved_rook = Some Board.{rank=Rank.(Rook false);color} in
     let rook_spot = Board.{row=king_row;col=rook_col} in
     let rook_okay = (Board.get_value_at rook_spot board = unmoved_rook) in
     if (not rook_okay) then None else
+
+    (* Check if anything is in the in-between spots *)
     let between_spots = List.map (fun col -> Board.{row=king_row;col}) between_cols in
     let spots_blocked = List.map (fun spot -> spot_blocked spot board) between_spots in
     let spots_clear = (List.filter (fun x -> x) spots_blocked = []) in
     if (not spots_clear) then None else
-    let king_origin = Board.{row=king_row;col=king_col} in
-    let king_destination = Board.{row=king_row;col=new_king_col} in
-    let king_move = Board.{from=king_origin;destination=king_destination} in
-    let rook_origin = Board.{row=king_row;col=rook_col} in
-    let rook_destination = Board.{row=king_row;col=new_rook_col} in
-    let rook_move = Board.{from=rook_origin;destination=rook_destination} in
-    let new_board = Board.(board |> make_move king_move |> make_move rook_move) in
+
+    (* Calculate the new board state *)
+    let open Board in
+    let king_origin = {row=king_row;col=king_col} in
+    let king_destination = {row=king_row;col=new_king_col} in
+    let king_move = {from=king_origin;destination=king_destination} in
+    let rook_origin = {row=king_row;col=rook_col} in
+    let rook_destination = {row=king_row;col=new_rook_col} in
+    let rook_move = {from=rook_origin;destination=rook_destination} in
+    let new_board = (
+        board |>
+        mark_moved king_origin |> mark_moved rook_origin |>
+        make_move king_move |> make_move rook_move) in
     Some {move=king_move;new_board}
 
 let castle_moves board color from king_moved : Board.legal_move_t list =
