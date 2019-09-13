@@ -4,6 +4,7 @@
 #mod_use "src/Rank.ml";;
 #mod_use "src/Color.ml";;
 #mod_use "src/Board.ml";;
+#mod_use "src/PotentialMove.ml";;
 #mod_use "src/IllegalMoveReason.ml";;
 #mod_use "src/GameState.ml";;
 #mod_use "src/IO.ml";;
