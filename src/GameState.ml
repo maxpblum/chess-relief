@@ -1,3 +1,17 @@
+type t = {
+    board : Board.t;
+    turn : Color.t;
+}
+
+type complete_move_t = {
+    move : Board.move_t;
+    new_state : t;
+}
+
+type attempted_move_t =
+    | Illegal of IllegalMoveReason.t
+    | Legal   of complete_move_t
+
 let spot_blocked spot board = match (Board.get_value_at spot board : Board.space_t) with
 | None -> false
 | Some _ -> true
@@ -42,14 +56,80 @@ let legal_pawn_moves board color from : Board.legal_move_t list =
         maybe_capture capture_right_spot
     ]
 
-let legal_knight_moves board _ from : Board.legal_move_t list =  (
-    [(2, 1); (2, -1); (-2, 1); (-2, -1); (1, 2); (1, -2); (-1, 2); (-1, -2)]
-    |> List.map (fun (rows, cols) -> Board.{rows;cols})
-    |> List.map Board.move_of_delta
-    |> List.map (fun f -> f from)
-    |> List.filter (fun Board.{destination} -> Board.is_on_board destination)
-    |> List.map (default_move board)
-)
+let rec failed_condition move state cond =
+    let Board.{from;destination} = move in
+    let {board;turn} = state in
+    let open PotentialMove in
+    let all_true = function
+        | first :: cs -> (
+            match failed_condition move state first with
+            | None -> failed_condition move state (AllOf cs)
+            | Some failed -> Some first
+        )
+        | [] -> None
+    in
+    let any_true = function
+        | first :: cs -> (
+            match failed_condition move state first with
+            | None -> None
+            | Some failed ->
+                match failed_condition move state (AnyOf cs) with
+                | None -> None
+                | Some AllOf fs -> Some (AllOf (failed::fs))
+                | _ -> Some failed
+        )
+        | [] -> Some (AllOf [])
+    in
+    let wrap_bool b = if b then None else Some cond in
+    match cond with
+    | True -> None
+    | AllOf subconditions -> all_true subconditions
+    | AnyOf subconditions -> any_true subconditions
+    | MovingOwnPiece -> (match Board.get_value_at from board with
+        | None -> Some cond
+        | Some {color} -> wrap_bool (turn=color)
+    )
+    | NotCapturingOwnPiece -> (match Board.get_value_at destination board with
+        | None -> None
+        | Some {color} -> wrap_bool (turn!=color)
+    )
+    | DestinationOnBoard -> wrap_bool (Board.is_on_board destination)
+    | SpaceEmpty delta -> (
+        let open Board in
+        let {destination=space} = move_of_delta delta from in
+        wrap_bool (get_value_at space board = None)
+    )
+
+let realize_potential_move move board = let open PotentialMove in function
+    | NormalMove -> Board.make_move move board
+    | _ -> Board.initial
+
+let attempt_potential_move state from potential_move =
+    let {turn;board} = state in
+    let open PotentialMove in
+    let {condition;special_move_type;delta} = potential_move in
+    let open Board in
+    let move = move_of_delta delta from in
+    match failed_condition move state condition with
+    | Some cond -> Illegal (FailedCondition cond)
+    | None -> Legal {
+        move;
+        new_state={
+            turn=Color.(opposite turn);
+            board=realize_potential_move move board special_move_type;
+        };
+    }
+
+let legal_knight_moves board color from : Board.legal_move_t list =
+    let open PotentialMove in
+    knight_moves |>
+    List.map (attempt_potential_move {board;turn=color} from) |>
+    List.fold_left (fun legal_moves attempted_move ->
+        match attempted_move with
+        | Illegal _ -> legal_moves
+        | Legal m -> m :: legal_moves
+    ) [] |>
+    List.map (fun {move;new_state={board}} -> Board.{move;new_board=board})
 
 let rec legal_line_moves_impl from direction prev board : Board.legal_move_t list =
     let destination = Board.{row=(prev.row+direction.rows);col=(prev.col+direction.cols)} in
@@ -196,20 +276,6 @@ let new_board_from_move board piece move =
     match List.find_opt (fun m -> Board.(m.move) = move) moves with
     | None -> None
     | Some m -> Some m.new_board
-
-type t = {
-    board : Board.t;
-    turn : Color.t;
-}
-
-type complete_move_t = {
-    move : Board.move_t;
-    new_state : t;
-}
-
-type attempted_move_t =
-    | Illegal of IllegalMoveReason.t
-    | Legal   of complete_move_t
 
 let initial = {board=Board.initial;turn=White}
 

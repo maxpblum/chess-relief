@@ -7,5 +7,6 @@ type t =
     | MovingIntoCheck
     | CastlingOutOfCheck
     | CastlingThroughCheck
+    | FailedCondition of PotentialMove.condition_t
 
 val to_string : t -> string
