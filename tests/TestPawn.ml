@@ -23,10 +23,15 @@ let test_basic_motion _ =
         [(6,3,Black,Pawn)] Black (6,3) (4,3) [(4,3,Black,Pawn)]
     ;
 
-    let common_assert = assert_illegal_move [(3,3,White,Pawn)] White (3,3) in
-    common_assert ~msg:"can't move laterally" (3,2);
-    common_assert ~msg:"can't move backwards" (2,3);
-    common_assert ~msg:"can't move two when not in starting position" (5,3);
+    let white_assert = assert_illegal_move [(3,3,White,Pawn)] White (3,3) in
+    white_assert ~msg:"can't move laterally" (3,2);
+    white_assert ~msg:"can't move backwards" (2,3);
+    white_assert ~msg:"can't move two when not in starting position" (5,3);
+
+    let black_assert = assert_illegal_move [(5,3,Black,Pawn)] Black (5,3) in
+    black_assert ~msg:"can't move laterally" (5,2);
+    black_assert ~msg:"can't move backwards" (6,3);
+    black_assert ~msg:"can't move two when not in starting position" (3,3);
 
     assert_illegal_move
         ~msg:"can't move forward into a piece"
