@@ -1,16 +1,73 @@
 open OUnit2;;
+open TestUtil;;
+open Color;;
 
-(* TODO: Replace with actual pawn test *)
-let test_to_list_and_set test_ctxt =
-    assert_equal
-        ~msg:"octet converted to list should have expected content"
-        Octet.(init 1 |> set 0 0 |> set 2 5 |> to_list)
-        [0; 1; 5; 1; 1; 1; 1; 1]
+let test_basic_motion _ =
+    assert_legal_move
+        ~msg:"White can move forward by one"
+        [(3,3,White,Pawn)] White (3,3) (4,3) [(4,3,White,Pawn)]
+    ;
 
-(* Name the test cases and group them together *)
+    assert_legal_move
+        ~msg:"Black can move forward by one"
+        [(3,3,Black,Pawn)] Black (3,3) (2,3) [(2,3,Black,Pawn)]
+    ;
+
+    assert_legal_move
+        ~msg:"White can move forward by two"
+        [(1,3,White,Pawn)] White (1,3) (3,3) [(3,3,White,Pawn)]
+    ;
+
+    assert_legal_move
+        ~msg:"Black can move forward by two"
+        [(6,3,Black,Pawn)] Black (6,3) (4,3) [(4,3,Black,Pawn)]
+    ;
+
+    let common_assert = assert_illegal_move [(3,3,White,Pawn)] White (3,3) in
+    common_assert ~msg:"can't move laterally" (3,2);
+    common_assert ~msg:"can't move backwards" (2,3);
+    common_assert ~msg:"can't move two when not in starting position" (5,3);
+
+    assert_illegal_move
+        ~msg:"can't move forward into a piece"
+        [(3,3,White,Pawn);(4,3,Black,Knight)] White (3,3) (4,3)
+    ;
+
+    assert_illegal_move
+        ~msg:"can't move two into a piece"
+        [(5,3,Black,Pawn);(3,3,White,Knight)] Black (5,3) (3,3)
+
+let test_capturing _ =
+    assert_legal_move
+        ~msg:"White can capture left"
+        [(3,3,White,Pawn); (4,2,Black,Knight)]
+        White (3,3) (4,2)
+        [(4,2,White,Pawn)]
+    ;
+
+    assert_legal_move
+        ~msg:"White can capture right"
+        [(3,3,White,Pawn); (4,4,Black,Knight)]
+        White (3,3) (4,4)
+        [(4,4,White,Pawn)]
+    ;
+
+    assert_legal_move
+        ~msg:"Black can capture toward White's left"
+        [(5,3,Black,Pawn); (4,2,White,Knight)]
+        Black (5,3) (4,2)
+        [(4,2,Black,Pawn)]
+    ;
+
+    assert_legal_move
+        ~msg:"Black can capture toward White's right"
+        [(5,3,Black,Pawn); (4,4,White,Knight)]
+        Black (5,3) (4,4)
+        [(4,4,Black,Pawn)]
+
 let suite =
 "suite">:::
  [
-     "test to_list and set">:: test_to_list_and_set;
+     "test basic motion">:: test_basic_motion;
+     "test capturing">:: test_capturing;
  ]
-;;
