@@ -39,6 +39,7 @@ let apply_universal_conditions move =
         move.condition;
     ])}
 
+(* Convenient constructor for making a "normal" PotentialMove from shorthand. *)
 let make_normal_move (rows,cols,condition) = {
     special_move_type = NormalMove;
     delta={rows;cols};
