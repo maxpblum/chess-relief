@@ -82,7 +82,7 @@ let rec failed_condition move state cond =
     in
     let wrap_bool b = if b then None else Some cond in
     match cond with
-    | True -> None
+    | TrueCondition -> None
     | AllOf subconditions -> all_true subconditions
     | AnyOf subconditions -> any_true subconditions
     | MovingOwnPiece -> (match Board.get_value_at from board with
