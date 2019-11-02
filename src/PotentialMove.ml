@@ -50,6 +50,7 @@ let knight_moves = [1,2 ; 1,-2 ; -1,2 ; -1,-2 ; 2,1 ; 2,-1 ; -2,1 ; -2,-1]
     |> List.map (fun (a,b) -> (a,b,TrueCondition))
     |> List.map make_normal_move
 
+(* range 5 10 => [5;6;7;8;9] *)
 let rec range start stop =
     if start = stop
     then []
