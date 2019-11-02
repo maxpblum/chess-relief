@@ -5,7 +5,7 @@ type special_move_t =
     | EnPassant
 
 type condition_t =
-    | True
+    | TrueCondition
 
     (* All of the subconditions must be met. *)
     | AllOf of condition_t list
@@ -46,7 +46,7 @@ let make_normal_move (rows,cols,condition) = {
 } |> apply_universal_conditions
 
 let knight_moves = [1,2 ; 1,-2 ; -1,2 ; -1,-2 ; 2,1 ; 2,-1 ; -2,1 ; -2,-1]
-    |> List.map (fun (a,b) -> (a,b,True))
+    |> List.map (fun (a,b) -> (a,b,TrueCondition))
     |> List.map make_normal_move
 
 let rec range start stop =
