@@ -22,7 +22,7 @@ type condition_t =
     (* The destination must be on the board. *)
     | DestinationOnBoard
 
-    (* A particular space be empty, expressed relative to the origin. *)
+    (* A particular space must be empty, expressed relative to the origin. *)
     | SpaceEmpty of Board.delta_t
 
 type t = {
