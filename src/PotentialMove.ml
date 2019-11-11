@@ -154,3 +154,10 @@ let diagonal_moves : t list =
 let bishop_moves : t list = diagonal_moves
 let queen_moves : t list = List.concat [diagonal_moves ; straight_moves]
 let rook_moves : t list = straight_moves
+
+let get_for_rank = let open Rank in function
+    | Bishop -> bishop_moves
+    | Queen -> queen_moves
+    | Rook _ -> rook_moves
+    | Knight -> knight_moves
+    | _ -> []
