@@ -23,6 +23,7 @@ let parse_move move_str =
     let from_row   = (int_of_char from_row_char) - row_offset in
     let   to_row   = (int_of_char   to_row_char) - row_offset in
 
+    Board.
     {from        = {row = from_row ; col = from_col} ;
      destination = {row =   to_row ; col =   to_col}}
 
@@ -76,7 +77,8 @@ let string_of_board invert board =
     String.concat "\n"
 
 let rec play_game (state : GameState.t) =
-    match GameState.game_ended state with
+    let open GameState in
+    match game_ended state with
     | Checkmate winner -> print_endline (String.concat "" [(Color.to_string winner); " wins!"])
     | Stalemate -> print_endline "Stalemate!"
     | Ongoing ->
@@ -90,7 +92,7 @@ let rec play_game (state : GameState.t) =
         let () = print_endline "Move not parseable." in
         play_game state)
     | ParsedMove move ->
-        match (GameState.attempt_move move state) with
+        match attempt_move move state with
         | Illegal reason -> (
             let () = IllegalMoveReason.to_string reason |> print_endline in
             play_game state)

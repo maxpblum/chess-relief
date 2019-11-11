@@ -37,21 +37,21 @@ let rec failed_condition move state cond =
         | [] -> Some (AllOf [])
     in
     let wrap_bool b = if b then None else Some cond in
+    let open Board in
     match cond with
     | TrueCondition -> None
     | AllOf subconditions -> all_true subconditions
     | AnyOf subconditions -> any_true subconditions
-    | MovingOwnPiece -> (match Board.get_value_at from board with
+    | MovingOwnPiece -> (match get_value_at from board with
         | None -> Some cond
         | Some {color} -> wrap_bool (turn=color)
     )
-    | NotCapturingOwnPiece -> (match Board.get_value_at destination board with
+    | NotCapturingOwnPiece -> (match get_value_at destination board with
         | None -> None
         | Some {color} -> wrap_bool (turn!=color)
     )
-    | DestinationOnBoard -> wrap_bool (Board.is_on_board destination)
+    | DestinationOnBoard -> wrap_bool (is_on_board destination)
     | SpaceEmpty delta -> (
-        let open Board in
         let {destination=space} = move_of_delta delta from in
         wrap_bool (get_value_at space board = None)
     )
@@ -59,6 +59,7 @@ let rec failed_condition move state cond =
 let realize_potential_move move board =
     let marked_board = (
         let open Board in
+        let open Rank in
         match Board.get_value_at move.from board with
         | None -> board
         | Some piece -> match piece with
@@ -80,6 +81,7 @@ let attempt_potential_move state from potential_move =
     let {condition;special_move_type;delta} = potential_move in
     let open Board in
     let move = move_of_delta delta from in
+    let open IllegalMoveReason in
     match failed_condition move state condition with
     | Some cond -> Illegal (FailedCondition cond)
     | None -> Legal {
@@ -90,14 +92,16 @@ let attempt_potential_move state from potential_move =
         };
     }
 
-let initial = {board=Board.initial;turn=White}
+let initial = {board=Board.initial;turn=Color.White}
 
 let king_location (color : Color.t) board =
+    let open Rank in
     let is_king Board.{piece={rank}} = match rank with
     | King _ -> true
     | _ -> false
     in
-    match (Board.all_pieces_of_color color board |> List.filter is_king) with
+    let open Board in
+    match (all_pieces_of_color color board |> List.filter is_king) with
     (* This shouldn't happen *)
     | [] -> None
     | {location} :: _ -> Some location
@@ -114,6 +118,7 @@ let find_one_potential_move_with_correct_delta _ _ _ = None
 let attempt_move move state =
     let {board;turn} = state in
     let open Board in
+    let open IllegalMoveReason in
     match get_value_at move.from board with
     | None -> Illegal FromEmpty
     | Some piece ->

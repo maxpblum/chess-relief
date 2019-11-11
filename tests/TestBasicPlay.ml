@@ -1,6 +1,7 @@
 open OUnit2;;
 open TestUtil;;
 open Color;;
+open Rank;;
 
 let test_moving_pieces _ =
     assert_legal_move

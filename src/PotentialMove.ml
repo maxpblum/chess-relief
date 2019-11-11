@@ -40,11 +40,12 @@ let apply_universal_conditions move =
     ])}
 
 (* Convenient constructor for making a "normal" PotentialMove from shorthand. *)
-let make_normal_move (rows,cols,condition) = {
-    special_move_type = NormalMove;
-    delta={rows;cols};
-    condition;
-} |> apply_universal_conditions
+let make_normal_move (rows,cols,condition) =
+    let open Board in {
+        special_move_type = NormalMove;
+        delta={rows;cols};
+        condition;
+    } |> apply_universal_conditions
 
 let knight_moves = [1,2 ; 1,-2 ; -1,2 ; -1,-2 ; 2,1 ; 2,-1 ; -2,1 ; -2,-1]
     |> List.map (fun (a,b) -> (a,b,TrueCondition))
@@ -124,6 +125,7 @@ let back_right : delta_set_t list = forward_left |> reverse_rows |> reverse_cols
  * that requires all intermediate spaces to be empty.
  *)
 let move_of_delta_set ((rows,cols),intermediates) =
+    let open Board in
     let empty_intermediate_conditions =
         intermediates |>
         List.map (fun (rows,cols) -> SpaceEmpty {rows;cols})

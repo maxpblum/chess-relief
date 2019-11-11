@@ -1,5 +1,7 @@
 open OUnit2;;
 open GameState;;
+open Rank;;
+open Color;;
 
 let string_of_game_ended : game_ended_t -> string = function
     | Ongoing -> "Ongoing"
