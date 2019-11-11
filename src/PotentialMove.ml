@@ -150,3 +150,5 @@ let diagonal_moves : t list =
     [forward_right; forward_left; back_right; back_left] |>
     List.map moves_of_delta_sets |>
     List.concat
+
+let bishop_moves : t list = diagonal_moves
