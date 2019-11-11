@@ -120,9 +120,9 @@ let attempt_potential_move state from potential_move =
         };
     }
 
-let legal_knight_moves board color from : Board.legal_move_t list =
+let potential_moves_to_legal_moves potential_moves board color from : Board.legal_move_t list =
     let open PotentialMove in
-    knight_moves |>
+    potential_moves |>
     List.map (attempt_potential_move {board;turn=color} from) |>
     List.fold_left (fun legal_moves attempted_move ->
         match attempted_move with
@@ -130,6 +130,10 @@ let legal_knight_moves board color from : Board.legal_move_t list =
         | Legal m -> m :: legal_moves
     ) [] |>
     List.map (fun {move;new_state={board}} -> Board.{move;new_board=board})
+
+let legal_knight_moves = potential_moves_to_legal_moves PotentialMove.knight_moves
+let legal_bishop_moves = potential_moves_to_legal_moves PotentialMove.bishop_moves
+let legal_queen_moves  = potential_moves_to_legal_moves PotentialMove.queen_moves
 
 let rec legal_line_moves_impl from direction prev board : Board.legal_move_t list =
     let destination = Board.{row=(prev.row+direction.rows);col=(prev.col+direction.cols)} in
@@ -153,15 +157,7 @@ let legal_line_moves_multi directions from board = (
 
 let diagonal_units = [(1, 1); (-1, 1); (1, -1); (-1, -1)]
 let straight_units = [(1, 0); (0, 1); (-1, 0); (0, -1)]
-
-let diagonal_moves = legal_line_moves_multi diagonal_units
 let straight_moves = legal_line_moves_multi straight_units
-
-let legal_bishop_moves board color from : Board.legal_move_t list =
-    diagonal_moves from board
-
-let legal_queen_moves board color from : Board.legal_move_t list =
-    List.concat [diagonal_moves from board ; straight_moves from board]
 
 let mark_moved location board =
     let open Board in (

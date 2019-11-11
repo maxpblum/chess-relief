@@ -152,3 +152,4 @@ let diagonal_moves : t list =
     List.concat
 
 let bishop_moves : t list = diagonal_moves
+let queen_moves : t list = List.concat [diagonal_moves ; straight_moves]
