@@ -147,6 +147,7 @@ let potential_moves_to_legal_moves potential_moves board color from : Board.lega
 
 let legal_knight_moves = potential_moves_to_legal_moves PotentialMove.knight_moves
 let legal_bishop_moves = potential_moves_to_legal_moves PotentialMove.bishop_moves
+let legal_rook_moves  = potential_moves_to_legal_moves PotentialMove.rook_moves
 let legal_queen_moves  = potential_moves_to_legal_moves PotentialMove.queen_moves
 
 let rec legal_line_moves_impl from direction prev board : Board.legal_move_t list =
@@ -171,7 +172,6 @@ let legal_line_moves_multi directions from board = (
 
 let diagonal_units = [(1, 1); (-1, 1); (1, -1); (-1, -1)]
 let straight_units = [(1, 0); (0, 1); (-1, 0); (0, -1)]
-let straight_moves = legal_line_moves_multi straight_units
 
 let mark_moved location board =
     let open Board in (
@@ -185,9 +185,6 @@ let mark_moved location board =
         ) in
         set_location location new_piece board
     )
-
-let legal_rook_moves board color from : Board.legal_move_t list =
-    mark_moved from board |> straight_moves from
 
 let basic_king_moves board color from : Board.legal_move_t list=
     let updated_board = mark_moved from board in
