@@ -100,8 +100,22 @@ let rec failed_condition move state cond =
         wrap_bool (get_value_at space board = None)
     )
 
-let realize_potential_move move board = let open PotentialMove in function
-    | NormalMove -> Board.make_move move board
+let realize_potential_move move board =
+    let marked_board = (
+        let open Board in
+        match Board.get_value_at move.from board with
+        | None -> board
+        | Some piece -> match piece with
+        | {color;rank=King false} ->
+                Board.set_location move.from (Some {color;rank=King true}) board
+        | {color;rank=Rook false} ->
+                Board.set_location move.from (Some {color;rank=Rook true}) board
+        | _ -> board
+    )
+    in
+    let open PotentialMove in
+    function
+    | NormalMove -> Board.make_move move marked_board
     | _ -> Board.initial
 
 let attempt_potential_move state from potential_move =
