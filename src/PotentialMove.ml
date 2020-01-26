@@ -40,11 +40,12 @@ let apply_universal_conditions move =
     ])}
 
 (* Convenient constructor for making a "normal" PotentialMove from shorthand. *)
-let make_normal_move (rows,cols,condition) = {
-    special_move_type = NormalMove;
-    delta={rows;cols};
-    condition;
-} |> apply_universal_conditions
+let make_normal_move (rows,cols,condition) =
+    let open Board in {
+        special_move_type = NormalMove;
+        delta={rows;cols};
+        condition;
+    } |> apply_universal_conditions
 
 let knight_moves = [1,2 ; 1,-2 ; -1,2 ; -1,-2 ; 2,1 ; 2,-1 ; -2,1 ; -2,-1]
     |> List.map (fun (a,b) -> (a,b,TrueCondition))
@@ -150,3 +151,14 @@ let diagonal_moves : t list =
     [forward_right; forward_left; back_right; back_left] |>
     List.map moves_of_delta_sets |>
     List.concat
+
+let bishop_moves : t list = diagonal_moves
+let queen_moves : t list = List.concat [diagonal_moves ; straight_moves]
+let rook_moves : t list = straight_moves
+
+let get_for_rank = let open Rank in function
+    | Bishop -> bishop_moves
+    | Queen -> queen_moves
+    | Rook _ -> rook_moves
+    | Knight -> knight_moves
+    | _ -> []
