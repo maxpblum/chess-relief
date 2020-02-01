@@ -113,7 +113,13 @@ let is_in_check color board =
     (* TODO: Fix check check *)
     | Some spot -> false
 
-let find_one_potential_move_with_correct_delta _ _ _ = None
+let rec try_potential_moves state from last_illegal_reason
+  : PotentialMove.t list -> attempted_move_t
+  = function
+    | [] -> Illegal last_illegal_reason
+    | pm :: pms -> match attempt_potential_move state from pm with
+        | Illegal i -> try_potential_moves state from last_illegal_reason pms
+        | legal -> legal
 
 let attempt_move move state =
     let {board;turn} = state in
@@ -123,10 +129,8 @@ let attempt_move move state =
     | None -> Illegal FromEmpty
     | Some piece ->
             let ({color;rank} : Board.piece_t) = piece in
-            let potential_moves = PotentialMove.get_for_rank rank in
-            match find_one_potential_move_with_correct_delta potential_moves move.from move.destination with
-            | None -> Illegal IllegalForPiece
-            | Some potential_move -> attempt_potential_move state move.from potential_move
+            PotentialMove.get_for_rank rank |>
+            try_potential_moves state move.from IllegalForPiece
 
 type game_ended_t =
     | Ongoing
