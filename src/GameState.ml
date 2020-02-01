@@ -121,6 +121,11 @@ let rec try_potential_moves state from last_illegal_reason
         | Illegal i -> try_potential_moves state from last_illegal_reason pms
         | legal -> legal
 
+let delta_matches move potential_move =
+    let open Board in
+    let open PotentialMove in
+    (move = move_of_delta potential_move.delta move.from)
+
 let attempt_move move state =
     let {board;turn} = state in
     let open Board in
@@ -130,6 +135,7 @@ let attempt_move move state =
     | Some piece ->
             let ({color;rank} : Board.piece_t) = piece in
             PotentialMove.get_for_rank rank |>
+            List.filter (delta_matches move) |>
             try_potential_moves state move.from IllegalForPiece
 
 type game_ended_t =
