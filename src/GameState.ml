@@ -133,8 +133,8 @@ let attempt_move move state =
     match get_value_at move.from board with
     | None -> Illegal FromEmpty
     | Some piece ->
-            let ({color;rank} : Board.piece_t) = piece in
-            PotentialMove.get_for_rank rank |>
+            piece |>
+            PotentialMove.get_for_piece |>
             List.filter (delta_matches move) |>
             try_potential_moves state move.from IllegalForPiece
 
