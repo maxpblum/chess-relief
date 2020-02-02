@@ -53,7 +53,6 @@ let test_stalemate _ =
         Stalemate
 
 let suite =
-"suite">:::
  [
      "test checkmate">:: test_checkmate;
      "test ongoing">:: test_ongoing;

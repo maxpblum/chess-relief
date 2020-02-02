@@ -41,7 +41,6 @@ let test_to_list_and_set test_ctxt =
 
 (* Name the test cases and group them together *)
 let suite =
-"suite">:::
  ["test octet init and get">:: test_octet_init_and_get;
   "test out of bounds">:: test_out_of_bounds;
   "test equality">:: test_equality;

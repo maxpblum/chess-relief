@@ -72,7 +72,6 @@ let test_capturing _ =
         [(4,4,Black,Pawn)]
 
 let suite =
-"suite">:::
  [
      "test basic motion">:: test_basic_motion;
      "test capturing">:: test_capturing;

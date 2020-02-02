@@ -38,7 +38,6 @@ let test_moving_pieces _ =
 
 
 let suite =
-"suite">:::
  [
      "test moving pieces">:: test_moving_pieces;
  ]

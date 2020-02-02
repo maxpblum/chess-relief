@@ -52,7 +52,6 @@ let test_basic_motion _ =
 
 
 let suite =
-"suite">:::
  [
      "test basic motion">:: test_basic_motion;
  ]

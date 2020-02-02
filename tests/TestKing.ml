@@ -142,7 +142,6 @@ let test_check _ =
         White (2,2) (3,2)
 
 let suite =
-"suite">:::
  [
      "test basic motion">:: test_basic_motion;
      "test castling">:: test_castling;

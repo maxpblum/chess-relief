@@ -44,7 +44,6 @@ let test_basic_motion _ =
         [(3,3,White,Bishop);(6,6,Black,Pawn);(7,7,Black,Knight)] White (3,3) (7,7)
 
 let suite =
-"suite">:::
  [
      "test basic motion">:: test_basic_motion;
  ]
