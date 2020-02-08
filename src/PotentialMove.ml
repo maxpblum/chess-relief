@@ -125,6 +125,7 @@ let back_right : delta_set_t list = forward_left |> reverse_rows |> reverse_cols
  * that requires all intermediate spaces to be empty.
  *)
 let move_of_delta_set ((rows,cols),intermediates) =
+    let open Board in
     let empty_intermediate_conditions =
         intermediates |>
         List.map (fun (rows,cols) -> SpaceEmpty {rows;cols})
@@ -173,6 +174,7 @@ let white_pawn_moves : t list = make_pawn_moves 1
 let black_pawn_moves : t list = make_pawn_moves (-1)
 
 let get_for_piece : Board.piece_t -> t list =
+    let open Color in
     let open Board in
     let open Rank in function
     | {rank=Pawn;color=White} -> white_pawn_moves
