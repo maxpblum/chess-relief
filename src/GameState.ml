@@ -3,6 +3,10 @@ type t = {
     turn : Color.t;
 }
 
+type possible_threat_t =
+    | NonThreat of IllegalMoveReason.t
+    | Threat of Board.t
+
 type attempted_move_t =
     | Illegal of IllegalMoveReason.t
     | Legal   of t
@@ -79,11 +83,8 @@ let attempt_potential_move state from potential_move =
     let move = move_of_delta delta from in
     let open IllegalMoveReason in
     match failed_condition move state condition with
-    | Some cond -> Illegal (FailedCondition cond)
-    | None -> Legal {
-        turn=Color.(opposite turn);
-        board=realize_potential_move move board special_move_type;
-    }
+    | Some cond -> NonThreat (FailedCondition cond)
+    | None -> Threat (realize_potential_move move board special_move_type)
 
 let initial = {board=Board.initial;turn=Color.White}
 
@@ -109,12 +110,12 @@ let is_in_check color board =
     | Some spot -> is_threatened_by (Color.opposite color) board spot
 
 let rec try_potential_moves state from last_illegal_reason
-  : PotentialMove.t list -> attempted_move_t
+  : PotentialMove.t list -> possible_threat_t
   = function
-    | [] -> Illegal last_illegal_reason
+    | [] -> NonThreat last_illegal_reason
     | pm :: pms -> match attempt_potential_move state from pm with
-        | Illegal i -> try_potential_moves state from last_illegal_reason pms
-        | legal -> legal
+        | NonThreat i -> try_potential_moves state from last_illegal_reason pms
+        | threat -> threat
 
 let delta_matches move potential_move =
     let open Board in
@@ -142,15 +143,15 @@ let attempt_move move state =
         List.filter (delta_matches move) |>
         try_potential_moves state move.from IllegalForPiece
     ) with
-    | Illegal i -> Illegal i
-    | Legal new_state ->
+    | NonThreat i -> Illegal i
+    | Threat new_board ->
 
     (* Fail if current player would be in check after this move *)
-    if is_in_check turn new_state.board
+    if is_in_check turn new_board
     then Illegal MovingIntoCheck
 
     (* The move is legal, return the new state *)
-    else Legal new_state
+    else Legal {turn=Color.opposite state.turn ; board=new_board}
 
 type game_ended_t =
     | Ongoing

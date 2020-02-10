@@ -2,6 +2,9 @@ type t = {
     board : Board.t;
     turn : Color.t;
 }
+type possible_threat_t =
+    | NonThreat of IllegalMoveReason.t
+    | Threat of Board.t
 type attempted_move_t =
     | Illegal of IllegalMoveReason.t
     | Legal   of t
