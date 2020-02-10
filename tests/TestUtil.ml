@@ -20,7 +20,7 @@ let assert_legal_move before turn from destination expected ~msg =
         let open GameState in
         match attempt_move_from_shorthand before turn from destination with
         | Illegal _ -> None
-        | Legal GameState.{new_state={board}} -> Some board in
+        | Legal GameState.{board} -> Some board in
 
     OUnit2.assert_equal
         ~msg:msg
@@ -33,7 +33,7 @@ let assert_illegal_move before turn from destination ~msg =
     let maybe_actual_board =
         match attempt_move_from_shorthand before turn from destination with
         | Illegal _ -> None
-        | Legal GameState.{new_state={board}} -> Some board in
+        | Legal GameState.{board} -> Some board in
 
     OUnit2.assert_equal
         ~msg:msg

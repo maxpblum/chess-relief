@@ -3,14 +3,9 @@ type t = {
     turn : Color.t;
 }
 
-type complete_move_t = {
-    move : Board.move_t;
-    new_state : t;
-}
-
 type attempted_move_t =
     | Illegal of IllegalMoveReason.t
-    | Legal   of complete_move_t
+    | Legal   of t
 
 let rec failed_condition move state cond =
     let open Board in
@@ -86,11 +81,8 @@ let attempt_potential_move state from potential_move =
     match failed_condition move state condition with
     | Some cond -> Illegal (FailedCondition cond)
     | None -> Legal {
-        move;
-        new_state={
-            turn=Color.(opposite turn);
-            board=realize_potential_move move board special_move_type;
-        };
+        turn=Color.(opposite turn);
+        board=realize_potential_move move board special_move_type;
     }
 
 let initial = {board=Board.initial;turn=Color.White}
@@ -151,14 +143,14 @@ let attempt_move move state =
         try_potential_moves state move.from IllegalForPiece
     ) with
     | Illegal i -> Illegal i
-    | Legal legal_move ->
+    | Legal new_state ->
 
     (* Fail if current player would be in check after this move *)
-    if is_in_check turn legal_move.new_state.board
+    if is_in_check turn new_state.board
     then Illegal MovingIntoCheck
 
-    (* The move is legal, return the move and the new state *)
-    else Legal legal_move
+    (* The move is legal, return the new state *)
+    else Legal new_state
 
 type game_ended_t =
     | Ongoing

@@ -96,4 +96,4 @@ let rec play_game (state : GameState.t) =
         | Illegal reason -> (
             let () = IllegalMoveReason.to_string reason |> print_endline in
             play_game state)
-        | Legal {move;new_state} -> play_game new_state
+        | Legal new_state -> play_game new_state

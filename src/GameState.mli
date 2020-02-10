@@ -2,13 +2,9 @@ type t = {
     board : Board.t;
     turn : Color.t;
 }
-type complete_move_t = {
-    move : Board.move_t;
-    new_state : t;
-}
 type attempted_move_t =
     | Illegal of IllegalMoveReason.t
-    | Legal   of complete_move_t
+    | Legal   of t
 type game_ended_t =
     | Ongoing
     | Checkmate of Color.t
