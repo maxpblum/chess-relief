@@ -11,25 +11,24 @@ type attempted_move_t =
     | Illegal of IllegalMoveReason.t
     | Legal   of t
 
-let rec failed_condition move state cond =
+let rec failed_condition move board cond =
     let open Board in
     let {from;destination} = move in
-    let {board;turn} = state in
     let open PotentialMove in
     let all_true = function
         | first :: cs -> (
-            match failed_condition move state first with
-            | None -> failed_condition move state (AllOf cs)
+            match failed_condition move board first with
+            | None -> failed_condition move board (AllOf cs)
             | Some failed -> Some first
         )
         | [] -> None
     in
     let any_true = function
         | first :: cs -> (
-            match failed_condition move state first with
+            match failed_condition move board first with
             | None -> None
             | Some failed ->
-                match failed_condition move state (AnyOf cs) with
+                match failed_condition move board (AnyOf cs) with
                 | None -> None
                 | Some AllOf fs -> Some (AllOf (failed::fs))
                 | _ -> Some failed
@@ -41,9 +40,14 @@ let rec failed_condition move state cond =
     | TrueCondition -> None
     | AllOf subconditions -> all_true subconditions
     | AnyOf subconditions -> any_true subconditions
-    | NotCapturingOwnPiece -> (match get_value_at destination board with
+    | NotCapturingOwnPiece -> (
+        match get_value_at from board with
+        (* This condition is meaningless if there is no origin piece. *)
+        | None -> wrap_bool true
+        | Some origin_piece ->
+        match get_value_at destination board with
         | None -> None
-        | Some {color} -> wrap_bool (turn!=color)
+        | Some captured_piece -> wrap_bool (origin_piece.color != captured_piece.color)
     )
     | DestinationOnBoard -> wrap_bool (is_on_board destination)
     | SpaceEmpty delta -> (
@@ -75,14 +79,13 @@ let realize_potential_move move board =
     | NormalMove -> Board.make_move move marked_board
     | _ -> Board.initial
 
-let attempt_potential_move state from potential_move =
-    let {turn;board} = state in
+let attempt_potential_move board from potential_move =
     let open PotentialMove in
     let {condition;special_move_type;delta} = potential_move in
     let open Board in
     let move = move_of_delta delta from in
     let open IllegalMoveReason in
-    match failed_condition move state condition with
+    match failed_condition move board condition with
     | Some cond -> NonThreat (FailedCondition cond)
     | None -> Threat (realize_potential_move move board special_move_type)
 
@@ -109,12 +112,12 @@ let is_in_check color board =
     (* TODO: Fix check check *)
     | Some spot -> is_threatened_by (Color.opposite color) board spot
 
-let rec try_potential_moves state from last_illegal_reason
+let rec try_potential_moves board from last_illegal_reason
   : PotentialMove.t list -> possible_threat_t
   = function
     | [] -> NonThreat last_illegal_reason
-    | pm :: pms -> match attempt_potential_move state from pm with
-        | NonThreat i -> try_potential_moves state from last_illegal_reason pms
+    | pm :: pms -> match attempt_potential_move board from pm with
+        | NonThreat i -> try_potential_moves board from last_illegal_reason pms
         | threat -> threat
 
 let delta_matches move potential_move =
@@ -141,7 +144,7 @@ let attempt_move move state =
         piece |>
         PotentialMove.get_for_piece |>
         List.filter (delta_matches move) |>
-        try_potential_moves state move.from IllegalForPiece
+        try_potential_moves board move.from IllegalForPiece
     ) with
     | NonThreat i -> Illegal i
     | Threat new_board ->
