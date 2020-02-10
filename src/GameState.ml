@@ -42,10 +42,6 @@ let rec failed_condition move state cond =
     | TrueCondition -> None
     | AllOf subconditions -> all_true subconditions
     | AnyOf subconditions -> any_true subconditions
-    | MovingOwnPiece -> (match get_value_at from board with
-        | None -> Some cond
-        | Some {color} -> wrap_bool (turn=color)
-    )
     | NotCapturingOwnPiece -> (match get_value_at destination board with
         | None -> None
         | Some {color} -> wrap_bool (turn!=color)
@@ -142,6 +138,10 @@ let attempt_move move state =
     match get_value_at move.from board with
     | None -> Illegal FromEmpty
     | Some piece ->
+
+    if piece.color != state.turn
+    then Illegal WrongColor
+    else
 
     (* Search for a legal move that matches the input *)
     match (

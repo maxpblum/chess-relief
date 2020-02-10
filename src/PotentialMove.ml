@@ -13,10 +13,7 @@ type condition_t =
     (* Any one of the subconditions must be met. *)
     | AnyOf of condition_t list
 
-    (* The origin must contain a piece belonging to the player. *)
-    | MovingOwnPiece
-
-    (* The destination must not contain a piece of the player's color. *)
+    (* The destination must not contain a piece of the origin's color. *)
     | NotCapturingOwnPiece
 
     (* The destination must be on the board. *)
@@ -39,7 +36,6 @@ type t = {
 
 let apply_universal_conditions move =
     {move with condition=(AllOf [
-        MovingOwnPiece;
         DestinationOnBoard;
         NotCapturingOwnPiece;
         move.condition;
