@@ -13,7 +13,8 @@ type attempted_move_t =
     | Legal   of complete_move_t
 
 let rec failed_condition move state cond =
-    let Board.{from;destination} = move in
+    let open Board in
+    let {from;destination} = move in
     let {board;turn} = state in
     let open PotentialMove in
     let all_true = function
@@ -37,7 +38,6 @@ let rec failed_condition move state cond =
         | [] -> Some (AllOf [])
     in
     let wrap_bool b = if b then None else Some cond in
-    let open Board in
     match cond with
     | TrueCondition -> None
     | AllOf subconditions -> all_true subconditions
@@ -55,6 +55,11 @@ let rec failed_condition move state cond =
         let {destination=space} = move_of_delta delta from in
         wrap_bool (get_value_at space board = None)
     )
+    | SpaceOccupied delta -> (
+        let {destination=space} = move_of_delta delta from in
+        wrap_bool (get_value_at space board != None)
+    )
+    | StartingRowIs row -> wrap_bool (row = from.row)
 
 let realize_potential_move move board =
     let marked_board = (
@@ -106,12 +111,14 @@ let king_location (color : Color.t) board =
     | [] -> None
     | {location} :: _ -> Some location
 
+let is_threatened_by color board spot = false
+
 let is_in_check color board =
     match king_location color board with
     (* This shouldn't happen, but let's say there's no check without a king *)
     | None -> false
     (* TODO: Fix check check *)
-    | Some spot -> false
+    | Some spot -> is_threatened_by (Color.opposite color) board spot
 
 let rec try_potential_moves state from last_illegal_reason
   : PotentialMove.t list -> attempted_move_t
@@ -130,13 +137,28 @@ let attempt_move move state =
     let {board;turn} = state in
     let open Board in
     let open IllegalMoveReason in
+
+    (* Fail if there is no piece at the origin *)
     match get_value_at move.from board with
     | None -> Illegal FromEmpty
     | Some piece ->
-            piece |>
-            PotentialMove.get_for_piece |>
-            List.filter (delta_matches move) |>
-            try_potential_moves state move.from IllegalForPiece
+
+    (* Search for a legal move that matches the input *)
+    match (
+        piece |>
+        PotentialMove.get_for_piece |>
+        List.filter (delta_matches move) |>
+        try_potential_moves state move.from IllegalForPiece
+    ) with
+    | Illegal i -> Illegal i
+    | Legal legal_move ->
+
+    (* Fail if current player would be in check after this move *)
+    if is_in_check turn legal_move.new_state.board
+    then Illegal MovingIntoCheck
+
+    (* The move is legal, return the move and the new state *)
+    else Legal legal_move
 
 type game_ended_t =
     | Ongoing

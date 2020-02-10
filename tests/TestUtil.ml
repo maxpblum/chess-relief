@@ -17,6 +17,7 @@ let assert_legal_move before turn from destination expected ~msg =
     let expected_board = Board.create (expand_shorthand expected) in
 
     let maybe_actual_board =
+        let open GameState in
         match attempt_move_from_shorthand before turn from destination with
         | Illegal _ -> None
         | Legal GameState.{new_state={board}} -> Some board in
@@ -28,6 +29,7 @@ let assert_legal_move before turn from destination expected ~msg =
         maybe_actual_board
 
 let assert_illegal_move before turn from destination ~msg =
+    let open GameState in
     let maybe_actual_board =
         match attempt_move_from_shorthand before turn from destination with
         | Illegal _ -> None

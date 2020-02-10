@@ -25,6 +25,12 @@ type condition_t =
     (* A particular space must be empty, expressed relative to the origin. *)
     | SpaceEmpty of Board.delta_t
 
+    (* A particular space must not be empty, expressed, relative to the origin. *)
+    | SpaceOccupied of Board.delta_t
+
+    (* The piece must be moving from a specific row. *)
+    | StartingRowIs of int
+
 type t = {
     special_move_type : special_move_t;
     delta : Board.delta_t;
@@ -157,21 +163,40 @@ let bishop_moves : t list = diagonal_moves
 let queen_moves : t list = List.concat [diagonal_moves ; straight_moves]
 let rook_moves : t list = straight_moves
 
-let make_pawn_moves direction : t list =
+let make_pawn_moves direction starting_row : t list =
     let open Board in
-    let next_square_empty = SpaceEmpty Board.{rows=direction;cols=0} in
-    let second_square_empty = SpaceEmpty Board.{rows=2*direction ; cols=0} in
+    let next_square_empty = SpaceEmpty {rows=direction;cols=0} in
+    let second_square_empty = SpaceEmpty {rows=2*direction ; cols=0} in
     [
-        (direction,     0, next_square_empty) ;
-        (2 * direction, 0, AllOf [next_square_empty; second_square_empty]) ;
+        (direction,        0, next_square_empty) ;
+        (2 * direction,    0, AllOf [
+            next_square_empty;
+            second_square_empty;
+            StartingRowIs starting_row;
+        ]) ;
+        (direction,     (-1), SpaceOccupied {rows=direction;cols=(-1)}) ;
+        (direction,        1, SpaceOccupied {rows=direction;cols=1}) ;
     ] |>
     List.map
         (fun move_tuple ->
             move_tuple |>
             make_normal_move)
 
-let white_pawn_moves : t list = make_pawn_moves 1
-let black_pawn_moves : t list = make_pawn_moves (-1)
+let white_pawn_moves : t list = make_pawn_moves 1    1
+let black_pawn_moves : t list = make_pawn_moves (-1) 6
+
+let basic_king_moves = [
+    (1,0) ;
+    (0,1) ;
+    ((-1),0) ;
+    (0,(-1)) ;
+    (1,1) ;
+    (1,(-1)) ;
+    ((-1),1) ;
+    ((-1),(-1)) ;
+] |> List.map (fun (rows,cols) -> make_normal_move (rows,cols,TrueCondition))
+
+let king_moves = basic_king_moves
 
 let get_for_piece : Board.piece_t -> t list =
     let open Color in
@@ -183,4 +208,4 @@ let get_for_piece : Board.piece_t -> t list =
     | {rank=Queen} -> queen_moves
     | {rank=Rook _} -> rook_moves
     | {rank=Knight} -> knight_moves
-    | _ -> []
+    | {rank=King _} -> king_moves
