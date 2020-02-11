@@ -6,19 +6,19 @@ open Rank;;
 let test_moving_pieces _ =
     assert_legal_move
         ~msg:"Can move a white piece on white's turn"
-        [(3,3,White,Pawn)] White (3,3) (4,3) [(4,3,White,Pawn)]
+        [(3,3,White,Pawn false)] White (3,3) (4,3) [(4,3,White,Pawn false)]
     ;
     assert_illegal_move
         ~msg:"Cannot move a black piece on white's turn"
-        [(3,3,Black,Pawn)] White (3,3) (4,3)
+        [(3,3,Black,Pawn false)] White (3,3) (4,3)
     ;
     assert_legal_move
         ~msg:"Can move a black piece on black's turn"
-        [(3,3,Black,Pawn)] Black (3,3) (2,3) [(2,3,Black,Pawn)]
+        [(3,3,Black,Pawn false)] Black (3,3) (2,3) [(2,3,Black,Pawn false)]
     ;
     assert_illegal_move
         ~msg:"Cannot move a white piece on black's turn"
-        [(3,3,White,Pawn)] Black (3,3) (4,3)
+        [(3,3,White,Pawn false)] Black (3,3) (4,3)
     ;
     assert_illegal_move
         ~msg:"Cannot move from an empty square"
@@ -26,7 +26,7 @@ let test_moving_pieces _ =
     ;
     assert_illegal_move
         ~msg:"Cannot move from a square off of the board"
-        [(3,3,White,Pawn)] White (9,9) (4,3)
+        [(3,3,White,Pawn false)] White (9,9) (4,3)
     ;
     assert_illegal_move
         ~msg:"Cannot move to a square off of the board"

@@ -14,6 +14,7 @@ type attempted_move_t =
     | Legal   of t
 
 let rec failed_condition move board cond =
+    let open Rank in
     let open Board in
     let {from;destination} = move in
     let open PotentialMove in
@@ -61,25 +62,51 @@ let rec failed_condition move board cond =
         wrap_bool (get_value_at space board != None)
     )
     | StartingRowIs row -> wrap_bool (row = from.row)
+    | EnPassantCapturable delta -> (
+        let {destination=space} = move_of_delta delta from in (
+            match get_value_at space board with
+            | Some {rank=Pawn true} -> true
+            | _ -> false
+        )
+        |> wrap_bool
+    )
 
 let realize_potential_move move board =
-    let marked_board = (
-        let open Board in
+    let open Board in
+    let king_and_rook_marked_board = (
         let open Rank in
-        match Board.get_value_at move.from board with
+        match get_value_at move.from board with
         | None -> board
         | Some piece -> match piece with
         | {color;rank=King false} ->
-                Board.set_location move.from (Some {color;rank=King true}) board
+                set_location move.from (Some {color;rank=King true}) board
         | {color;rank=Rook false} ->
-                Board.set_location move.from (Some {color;rank=Rook true}) board
+                set_location move.from (Some {color;rank=Rook true}) board
         | _ -> board
     )
     in
+    (* TODO: Make this check for Pawn true and convert to Pawn false *)
+    let pawn_marked_board = king_and_rook_marked_board in
     let open PotentialMove in
     function
-    | NormalMove -> Board.make_move move marked_board
-    | _ -> Board.initial
+    (* TODO: Make a special move type for pawn jump that creates Pawn true *)
+    | NormalMove -> make_move move marked_board
+    | EnPassant -> (
+        let captured_pawn_row =
+            (* Capturing a black pawn that just jumped to row four. *)
+            if move.destination.row >= 4 then 4
+            (* Capturing a white pawn that just jumped to row three. *)
+            else 3
+        in
+        let captured_pawn_spot = {
+            row=captured_pawn_row ;
+            col=move.destination.col ;
+        } in
+        marked_board |>
+        make_move move |>
+        set_location captured_pawn_spot None
+    )
+    | _ -> initial
 
 let attempt_potential_move board from potential_move =
     let open PotentialMove in

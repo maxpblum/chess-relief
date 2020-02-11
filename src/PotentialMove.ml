@@ -28,6 +28,9 @@ type condition_t =
     (* The piece must be moving from a specific row. *)
     | StartingRowIs of int
 
+    (* The space expressed relative to origin must contain a pawn that just jumped there. *)
+    | EnPassantCapturable of Board.delta_t
+
 type t = {
     special_move_type : special_move_t;
     delta : Board.delta_t;
@@ -161,22 +164,38 @@ let rook_moves : t list = straight_moves
 
 let make_pawn_moves direction starting_row : t list =
     let open Board in
-    let next_square_empty = SpaceEmpty {rows=direction;cols=0} in
-    let second_square_empty = SpaceEmpty {rows=2*direction ; cols=0} in
-    [
-        (direction,        0, next_square_empty) ;
-        (2 * direction,    0, AllOf [
-            next_square_empty;
-            second_square_empty;
-            StartingRowIs starting_row;
-        ]) ;
-        (direction,     (-1), SpaceOccupied {rows=direction;cols=(-1)}) ;
-        (direction,        1, SpaceOccupied {rows=direction;cols=1}) ;
-    ] |>
-    List.map
-        (fun move_tuple ->
-            move_tuple |>
-            make_normal_move)
+    let simple_moves = (
+        let next_square_empty = SpaceEmpty {rows=direction;cols=0} in
+        let second_square_empty = SpaceEmpty {rows=2*direction ; cols=0} in
+        [
+            (direction,        0, next_square_empty) ;
+            (2 * direction,    0, AllOf [
+                next_square_empty;
+                second_square_empty;
+                StartingRowIs starting_row;
+            ]) ;
+            (direction,     (-1), SpaceOccupied {rows=direction;cols=(-1)}) ;
+            (direction,        1, SpaceOccupied {rows=direction;cols=1}) ;
+        ] |>
+        List.map make_normal_move
+    ) in
+    let make_en_passant col_direction =
+        let diagonal_normal_move =
+            make_normal_move (direction, col_direction, TrueCondition) in
+        {
+            diagonal_normal_move
+            with
+            special_move_type=EnPassant ;
+            condition=AllOf [
+                diagonal_normal_move.condition ;
+                (* There must be a just-jumped pawn in the same row
+                 * that the current pawn started in, in the column
+                 * that the current pawn is moving to. *)
+                EnPassantCapturable {rows=0 ; cols=col_direction}
+            ]
+        }
+    in
+    List.concat [simple_moves ; [make_en_passant 1 ; make_en_passant (-1)]]
 
 let white_pawn_moves : t list = make_pawn_moves 1    1
 let black_pawn_moves : t list = make_pawn_moves (-1) 6
@@ -198,8 +217,8 @@ let get_for_piece : Board.piece_t -> t list =
     let open Color in
     let open Board in
     let open Rank in function
-    | {rank=Pawn;color=White} -> white_pawn_moves
-    | {rank=Pawn;color=Black} -> black_pawn_moves
+    | {rank=Pawn _;color=White} -> white_pawn_moves
+    | {rank=Pawn _;color=Black} -> black_pawn_moves
     | {rank=Bishop} -> bishop_moves
     | {rank=Queen} -> queen_moves
     | {rank=Rook _} -> rook_moves

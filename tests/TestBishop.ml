@@ -36,12 +36,12 @@ let test_basic_motion _ =
 
     assert_legal_move
         ~msg:"Can capture"
-        [(3,3,White,Bishop);(6,6,Black,Pawn)] White (3,3) (6,6) [(6,6,White,Bishop)]
+        [(3,3,White,Bishop);(6,6,Black,Pawn false)] White (3,3) (6,6) [(6,6,White,Bishop)]
     ;
 
     assert_illegal_move
         ~msg:"Cannot move through a piece"
-        [(3,3,White,Bishop);(6,6,Black,Pawn);(7,7,Black,Knight)] White (3,3) (7,7)
+        [(3,3,White,Bishop);(6,6,Black,Pawn false);(7,7,Black,Knight)] White (3,3) (7,7)
 
 let suite =
  [

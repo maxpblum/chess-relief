@@ -1,7 +1,7 @@
 type moved_t = bool
 
 type t =
-    | Pawn
+    | Pawn of bool
     | Rook of moved_t
     | Knight
     | Bishop
@@ -15,7 +15,7 @@ let to_string_in_background_color : t -> string = function
     | Rook _ -> "♖"
     | Bishop -> "♗"
     | Knight -> "♘"
-    | Pawn -> "♙"
+    | Pawn _ -> "♙"
 
 (* Maps piece constructors to opposite-color string representation *)
 let to_string_in_non_background_color : t -> string = function
@@ -24,11 +24,11 @@ let to_string_in_non_background_color : t -> string = function
     | Rook _ -> "♜"
     | Bishop -> "♝"
     | Knight -> "♞"
-    | Pawn -> "♟"
+    | Pawn _ -> "♟"
 
 let clean_rook = Rook false
 let clean_king = King false
 let queen = Queen
 let bishop = Bishop
 let knight = Knight
-let pawn = Pawn
+let pawn = Pawn false

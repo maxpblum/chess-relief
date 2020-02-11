@@ -46,7 +46,7 @@ let test_basic_motion _ =
 
     assert_legal_move
         ~msg:"Can capture"
-        [(3,3,White,King true);(4,4,Black,Pawn)] White (3,3) (4,4) [(4,4,White,King true)]
+        [(3,3,White,King true);(4,4,Black,Pawn false)] White (3,3) (4,4) [(4,4,White,King true)]
     ;
 
     assert_illegal_move
@@ -61,9 +61,9 @@ let test_basic_motion _ =
 
     assert_legal_move
         ~msg:"King remains 'clean' when not moved"
-        [(0,4,White,King false);(1,0,White,Pawn)]
+        [(0,4,White,King false);(1,0,White,Pawn false)]
         White (1,0) (2,0)
-        [(0,4,White,King false);(2,0,White,Pawn)]
+        [(0,4,White,King false);(2,0,White,Pawn false)]
 
 let test_castling _ =
     assert_legal_move
@@ -138,7 +138,7 @@ let test_check _ =
 
     assert_illegal_move
         ~msg:"Must move out of check"
-        [(3,3,White,King true);(7,7,Black,Queen);(2,2,White,Pawn)]
+        [(3,3,White,King true);(7,7,Black,Queen);(2,2,White,Pawn false)]
         White (2,2) (3,2)
 
 let suite =

@@ -56,7 +56,7 @@ let test_basic_motion _ =
 
     assert_legal_move
         ~msg:"Can capture"
-        [(3,3,White,Knight);(5,4,Black,Pawn)] White (3,3) (5,4) [(5,4,White,Knight)]
+        [(3,3,White,Knight);(5,4,Black,Pawn false)] White (3,3) (5,4) [(5,4,White,Knight)]
 
 let suite =
  [

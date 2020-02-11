@@ -1,7 +1,7 @@
 type moved_t = bool
 
 type t =
-    | Pawn
+    | Pawn of bool
     | Rook of moved_t
     | Knight
     | Bishop

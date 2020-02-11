@@ -48,7 +48,7 @@ let test_ongoing _ =
 let test_stalemate _ =
     assert_endgame_state
         ~msg:"Stalemate when no moves and no check"
-        [(0,0,White,King true);(1,2,Black,Pawn);(2,2,Black,Pawn);(2,1,Black,Pawn)]
+        [(0,0,White,King true);(1,2,Black,Pawn false);(2,2,Black,Pawn false);(2,1,Black,Pawn false)]
         White
         Stalemate
 
