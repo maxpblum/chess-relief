@@ -125,10 +125,18 @@ let delta_matches move potential_move =
     let open PotentialMove in
     (move = move_of_delta potential_move.delta move.from)
 
+let find_matching_threat board piece move =
+    let open IllegalMoveReason in
+    let open Board in
+    piece |>
+    PotentialMove.get_for_piece |>
+    List.filter (delta_matches move) |>
+    try_potential_moves board move.from IllegalForPiece
+
 let attempt_move move state =
     let {board;turn} = state in
-    let open Board in
     let open IllegalMoveReason in
+    let open Board in
 
     (* Fail if there is no piece at the origin *)
     match get_value_at move.from board with
@@ -140,12 +148,7 @@ let attempt_move move state =
     else
 
     (* Search for a legal move that matches the input *)
-    match (
-        piece |>
-        PotentialMove.get_for_piece |>
-        List.filter (delta_matches move) |>
-        try_potential_moves board move.from IllegalForPiece
-    ) with
+    match find_matching_threat board piece move with
     | NonThreat i -> Illegal i
     | Threat new_board ->
 
