@@ -103,15 +103,6 @@ let king_location (color : Color.t) board =
     | [] -> None
     | {location} :: _ -> Some location
 
-let is_threatened_by color board spot = false
-
-let is_in_check color board =
-    match king_location color board with
-    (* This shouldn't happen, but let's say there's no check without a king *)
-    | None -> false
-    (* TODO: Fix check check *)
-    | Some spot -> is_threatened_by (Color.opposite color) board spot
-
 let rec try_potential_moves board from last_illegal_reason
   : PotentialMove.t list -> possible_threat_t
   = function
@@ -132,6 +123,27 @@ let find_matching_threat board piece move =
     PotentialMove.get_for_piece |>
     List.filter (delta_matches move) |>
     try_potential_moves board move.from IllegalForPiece
+
+let piece_threatens_spot board spot Board.{piece;location} =
+    let open Board in
+    let move = {from=location;destination=spot} in
+    match find_matching_threat board piece move with
+    | NonThreat _ -> false
+    | Threat _ -> true
+
+let is_threatened_by color board spot =
+    Board.all_pieces_of_color color board |>
+    List.find_opt (piece_threatens_spot board spot) |>
+    function
+        | None -> false
+        | Some _ -> true
+
+let is_in_check color board =
+    match king_location color board with
+    (* This shouldn't happen, but let's say there's no check without a king *)
+    | None -> false
+    (* TODO: Fix check check *)
+    | Some spot -> is_threatened_by (Color.opposite color) board spot
 
 let attempt_move move state =
     let {board;turn} = state in
