@@ -3,6 +3,8 @@ type t = {
     turn : Color.t;
 }
 
+let find_bool f xs = List.find_opt f xs |> function | Some _ -> true | None -> false
+
 type possible_threat_t =
     | NonThreat of IllegalMoveReason.t
     | Threat of Board.t
@@ -176,8 +178,27 @@ type game_ended_t =
     | Checkmate of Color.t
     | Stalemate
 
-let game_ended {board;turn} =
-    let has_moves = true in
+let has_moves state =
+    let {board;turn} = state in
+    let open Board in
+    let open PotentialMove in
+    all_pieces_of_color turn board |>
+    find_bool (
+        fun {piece;location} ->
+            PotentialMove.get_for_piece piece |>
+            find_bool (
+                fun {delta} ->
+                    let move = move_of_delta delta location in
+                    match attempt_move move state with
+                    | Legal _ -> true
+                    | Illegal _ -> false
+            )
+    )
+
+
+let game_ended state =
+    let has_moves = has_moves state in
+    let {board;turn} = state in
     if (is_in_check turn board) && (not has_moves) then Checkmate Color.(opposite turn)
     (* TODO: Implement repeated-moves stalemate *)
     else if has_moves then Ongoing
