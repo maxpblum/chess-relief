@@ -74,6 +74,8 @@ let rec failed_condition move board cond =
     | MovingToEndRow -> wrap_bool (destination.row == 0 || destination.row == 7)
     | MoveSpecifiesReplacement ->
             wrap_bool (match move.replacement with None -> false | Some _ -> true)
+    | SpaceNotThreatened delta -> wrap_bool true
+    | PieceHasNotMoved delta -> wrap_bool true
 
 let realize_potential_move move board =
     let open Board in

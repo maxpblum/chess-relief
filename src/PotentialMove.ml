@@ -41,6 +41,15 @@ type condition_t =
     (* The move object must specify a replacement rank (for pawn exchange). *)
     | MoveSpecifiesReplacement
 
+    (* The space expressed relative to origin must not be threatened by the
+     * other team (the team for which we are not currently evaluating a
+     * potential move. *)
+    | SpaceNotThreatened of Board.delta_t
+
+    (* The space expressed relative to origin must contain a king or rook that
+     * has not moved yet during this game. *)
+    | PieceHasNotMoved of Board.delta_t
+
 type t = {
     special_move_type : special_move_t;
     delta : Board.delta_t;
@@ -234,7 +243,28 @@ let basic_king_moves = [
     ((-1),(-1)) ;
 ] |> List.map (fun (rows,cols) -> make_normal_move (rows,cols,TrueCondition))
 
-let king_moves = basic_king_moves
+let king_side_castle =
+    let open Board in
+    {(make_normal_move (0,2,AllOf [
+        SpaceEmpty {rows=0;cols=1} ;
+        SpaceEmpty {rows=0;cols=2} ;
+        SpaceNotThreatened {rows=0;cols=1} ;
+        PieceHasNotMoved {rows=0;cols=0} ;
+        PieceHasNotMoved {rows=0;cols=3} ;
+    ])) with special_move_type=Castling}
+
+let queen_side_castle =
+    let open Board in
+    {(make_normal_move (0,(-2),AllOf [
+        SpaceEmpty {rows=0;cols=(-1)} ;
+        SpaceEmpty {rows=0;cols=(-2)} ;
+        SpaceEmpty {rows=0;cols=(-3)} ;
+        SpaceNotThreatened {rows=0;cols=(-1)} ;
+        PieceHasNotMoved {rows=0;cols=0} ;
+        PieceHasNotMoved {rows=0;cols=(-4)} ;
+    ])) with special_move_type=Castling}
+
+let king_moves = List.concat [basic_king_moves ; [king_side_castle ; queen_side_castle]]
 
 let get_for_piece : Board.piece_t -> t list =
     let open Color in
