@@ -6,7 +6,11 @@ type space_t = piece_t option
 type t = space_t Octet.t Octet.t
 type delta_t = {rows:int ; cols:int}
 type location_t = {row:int ; col:int}
-type move_t = {from:location_t ; destination:location_t}
+type move_t = {from:location_t ; destination:location_t ; replacement:Rank.t option}
+
+let null_location = {row=(-1) ; col=(-1)}
+let null_move = {from=null_location ; destination=null_location ; replacement=None}
+
 type legal_move_t = {
     move : move_t ;
     new_board : t ;
@@ -38,7 +42,13 @@ let make_move move board : t =
     board |> set_location move.from None |> set_location move.destination piece
 
 let move_of_delta {rows;cols} from =
-    {from;destination={row=from.row+rows;col=from.col+cols}}
+    {null_move with
+        from=from ;
+        destination={
+            row=from.row + rows ;
+            col=from.col + cols ;
+        }
+    }
 
 let rec fold_impl combine accum board location =
     if location.row > 7 then accum

@@ -25,7 +25,8 @@ let parse_move move_str =
 
     Board.
     {from        = {row = from_row ; col = from_col} ;
-     destination = {row =   to_row ; col =   to_col}}
+     destination = {row =   to_row ; col =   to_col} ;
+     replacement = None}
 
     )
 

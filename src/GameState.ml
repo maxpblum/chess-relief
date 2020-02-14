@@ -175,7 +175,7 @@ let find_matching_threat board piece move =
 
 let piece_threatens_spot board spot Board.{piece;location} =
     let open Board in
-    let move = {from=location;destination=spot} in
+    let move = {null_move with from=location ; destination=spot} in
     match find_matching_threat board piece move with
     | NonThreat _ -> false
     | Threat _ -> true

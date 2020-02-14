@@ -10,6 +10,7 @@ let attempt_move_from_shorthand before turn (from_row,from_col) (to_row,to_col) 
     let move = Board.{
         from={row=from_row;col=from_col};
         destination={row=to_row;col=to_col};
+        replacement=None;
     } in
     GameState.attempt_move move before_state
 

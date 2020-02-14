@@ -6,7 +6,10 @@ type space_t = piece_t option
 type t
 type delta_t = {rows:int ; cols:int}
 type location_t = {row:int ; col:int}
-type move_t = {from:location_t ; destination:location_t}
+type move_t = {from:location_t ; destination:location_t ; replacement:Rank.t option}
+
+val null_move : move_t
+
 type legal_move_t = {
     move : move_t ;
     new_board : t ;
