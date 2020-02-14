@@ -32,6 +32,15 @@ type condition_t =
     (* The space expressed relative to origin must contain a pawn that just jumped there. *)
     | EnPassantCapturable of Board.delta_t
 
+    (* The destination is not in row 0 or 7. *)
+    | NotMovingToEndRow
+
+    (* The destination is in row 0 or 7. *)
+    | MovingToEndRow
+
+    (* The move object must specify a replacement rank (for pawn exchange). *)
+    | MoveSpecifiesReplacement
+
 type t = {
     special_move_type : special_move_t;
     delta : Board.delta_t;
@@ -163,6 +172,10 @@ let bishop_moves : t list = diagonal_moves
 let queen_moves : t list = List.concat [diagonal_moves ; straight_moves]
 let rook_moves : t list = straight_moves
 
+let require_condition cond pm = {
+    pm with condition = AllOf [ pm.condition ; cond ]
+}
+
 let make_pawn_moves direction starting_row : t list =
     let open Board in
     let next_square_empty = SpaceEmpty {rows=direction;cols=0} in
@@ -175,6 +188,12 @@ let make_pawn_moves direction starting_row : t list =
         ] |>
         List.map make_normal_move
     ) in
+    let non_exchange_simple_moves =
+        simple_moves |> List.map (require_condition NotMovingToEndRow) in
+    let exchange_moves =
+        simple_moves |>
+        List.map (require_condition (AllOf [MovingToEndRow ; MoveSpecifiesReplacement])) |>
+        List.map (fun pm -> { pm with special_move_type = PawnExchange }) in
     let jump = {
         (make_normal_move (
             2 * direction, 0, AllOf [
@@ -199,7 +218,7 @@ let make_pawn_moves direction starting_row : t list =
             ]
         }
     in
-    List.concat [simple_moves ; [jump ; make_en_passant 1 ; make_en_passant (-1)]]
+    List.concat [non_exchange_simple_moves ; exchange_moves ; [jump ; make_en_passant 1 ; make_en_passant (-1)]]
 
 let white_pawn_moves : t list = make_pawn_moves 1    1
 let black_pawn_moves : t list = make_pawn_moves (-1) 6

@@ -2,6 +2,7 @@ open OUnit2;;
 open TestUtil;;
 open Color;;
 open Rank;;
+open Board;;
 
 let test_basic_motion _ =
     assert_legal_move
@@ -126,9 +127,17 @@ let test_en_passant _ =
         Black (3,4) (2,3)
         [(2,3,Black,Pawn false)]
 
+let test_exchange _ =
+    assert_legal_full_move
+        ~msg:"White can exchange a pawn for a rook"
+        [(6,4,White,Pawn false)]
+        White {from={row=6;col=4} ; destination={row=7;col=4} ; replacement=Some (Rook false)}
+        [(7,4,White,Rook false)]
+
 let suite =
  [
      "test basic motion">:: test_basic_motion;
      "test capturing">:: test_capturing;
      "test en passant capturing">:: test_en_passant;
+     "test pawn exchange">:: test_exchange;
  ]

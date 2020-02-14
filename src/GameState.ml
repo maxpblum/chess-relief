@@ -70,6 +70,10 @@ let rec failed_condition move board cond =
         )
         |> wrap_bool
     )
+    | NotMovingToEndRow -> wrap_bool (destination.row != 0 && destination.row != 7)
+    | MovingToEndRow -> wrap_bool (destination.row == 0 || destination.row == 7)
+    | MoveSpecifiesReplacement ->
+            wrap_bool (match move.replacement with None -> false | Some _ -> true)
 
 let realize_potential_move move board =
     let open Board in
@@ -126,13 +130,24 @@ let realize_potential_move move board =
             set_location move.destination (Some {color;rank=Pawn true})
     )
     | Castling -> Board.initial
-    | PawnExchange -> Board.initial
+    | PawnExchange -> (
+        match (pawn_marked_board |> get_value_at move.from) with
+        (* Should not be possible *)
+        | None -> Board.initial
+        | Some {color} ->
+        match move.replacement with
+        (* Should not be possible *)
+        | None -> Board.initial
+        | Some rank ->
+            make_move move pawn_marked_board |>
+            set_location move.destination (Some {color;rank})
+    )
 
-let attempt_potential_move board from potential_move =
+let attempt_potential_move board from replacement potential_move =
     let open PotentialMove in
     let {condition;special_move_type;delta} = potential_move in
     let open Board in
-    let move = move_of_delta delta from in
+    let move = { (move_of_delta delta from) with replacement=replacement } in
     let open IllegalMoveReason in
     match failed_condition move board condition with
     | Some cond -> NonThreat (FailedCondition cond)
@@ -152,18 +167,20 @@ let king_location (color : Color.t) board =
     | [] -> None
     | {location} :: _ -> Some location
 
-let rec try_potential_moves board from last_illegal_reason
+let rec try_potential_moves board from replacement last_illegal_reason
   : PotentialMove.t list -> possible_threat_t
   = function
     | [] -> NonThreat last_illegal_reason
-    | pm :: pms -> match attempt_potential_move board from pm with
-        | NonThreat i -> try_potential_moves board from last_illegal_reason pms
+    | pm :: pms -> match attempt_potential_move board from replacement pm with
+        | NonThreat i -> try_potential_moves board from replacement i pms
         | threat -> threat
 
 let delta_matches move potential_move =
     let open Board in
     let open PotentialMove in
-    (move = move_of_delta potential_move.delta move.from)
+    (* To match pawn exchange moves, pretend they are not pawn exchange moves,
+     * since move_of_delta always outputs a non-pawn exchange. *)
+    ({move with replacement=None} = move_of_delta potential_move.delta move.from)
 
 let find_matching_threat board piece move =
     let open IllegalMoveReason in
@@ -171,11 +188,13 @@ let find_matching_threat board piece move =
     piece |>
     PotentialMove.get_for_piece |>
     List.filter (delta_matches move) |>
-    try_potential_moves board move.from IllegalForPiece
+    try_potential_moves board move.from move.replacement IllegalForPiece
 
 let piece_threatens_spot board spot Board.{piece;location} =
     let open Board in
-    let move = {null_move with from=location ; destination=spot} in
+    let open Rank in
+    (* Ensure pawn exchanges are recognized as valid. *)
+    let move = {from=location ; destination=spot ; replacement=Some Queen} in
     match find_matching_threat board piece move with
     | NonThreat _ -> false
     | Threat _ -> true
@@ -227,6 +246,7 @@ type game_ended_t =
 let has_moves state =
     let {board;turn} = state in
     let open Board in
+    let open Rank in
     let open PotentialMove in
     all_pieces_of_color turn board |>
     find_bool (
@@ -234,7 +254,11 @@ let has_moves state =
             PotentialMove.get_for_piece piece |>
             find_bool (
                 fun {delta} ->
-                    let move = move_of_delta delta location in
+                    let move = { (move_of_delta delta location)
+                                 (* Always specify the optional replacement
+                                  * so that potential pawn-exchange moves
+                                  * will be recognized as legal. *)
+                                 with replacement=Some Queen } in
                     match attempt_move move state with
                     | Legal _ -> true
                     | Illegal _ -> false
