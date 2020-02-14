@@ -4,16 +4,36 @@ type parsed_move_t =
 
 let lower = Char.lowercase_ascii
 
+let rank_of_char =
+    let open Rank in
+    function
+    | 'r' -> Some (Rook false)
+    | 'k' -> Some Knight
+    | 'b' -> Some Bishop
+    | 'q' -> Some Queen
+    | _ -> None
+
 let parse_move move_str =
     let len = String.length move_str in
     if len < 4
     then UnparseableMove
     else ParsedMove (
 
-    let from_col_char = String.get move_str 0       |> lower in
-    let from_row_char = String.get move_str 1                in
-    let   to_col_char = String.get move_str (len-2) |> lower in
-    let   to_row_char = String.get move_str (len-1)          in
+    let exchange_rank = String.get move_str (len-1) |> lower |> rank_of_char in
+    let (stripped_move_str,stripped_len) = match exchange_rank with
+    | None -> (move_str,len)
+    | Some rank ->
+        let stripped =
+            (move_str |>
+            String.mapi (fun idx ch -> if idx < (len-1) then ch else ' ') |>
+            String.trim)
+        in (stripped, String.length stripped)
+    in
+
+    let from_col_char = String.get stripped_move_str 0       |> lower in
+    let from_row_char = String.get stripped_move_str 1                in
+    let   to_col_char = String.get stripped_move_str (stripped_len-2) |> lower in
+    let   to_row_char = String.get stripped_move_str (stripped_len-1)          in
 
     let col_offset = int_of_char 'a'                          in
     let from_col   = (int_of_char from_col_char) - col_offset in
@@ -26,7 +46,7 @@ let parse_move move_str =
     Board.
     {from        = {row = from_row ; col = from_col} ;
      destination = {row =   to_row ; col =   to_col} ;
-     replacement = None}
+     replacement = exchange_rank}
 
     )
 
