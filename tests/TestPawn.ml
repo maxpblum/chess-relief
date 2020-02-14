@@ -71,8 +71,64 @@ let test_capturing _ =
         Black (5,3) (4,4)
         [(4,4,Black,Pawn false)]
 
+let test_en_passant _ =
+    assert_legal_move
+        ~msg:"White pawn marked eligible after a jump"
+        [(1,1,White,Pawn false)]
+        White (1,1) (3,1)
+        [(3,1,White,Pawn true)]
+    ;
+
+    assert_legal_move
+        ~msg:"Black pawn marked eligible after a jump"
+        [(6,1,Black,Pawn false)]
+        Black (6,1) (4,1)
+        [(4,1,Black,Pawn true)]
+    ;
+
+    assert_legal_move
+        ~msg:"Not marked eligible after one-space move"
+        [(1,4,White,Pawn false)]
+        White (1,4) (2,4)
+        [(2,4,White,Pawn false)]
+    ;
+
+    assert_legal_move
+        ~msg:"Not marked eligible after capture"
+        [(3,3,White,Pawn false) ; (4,4,Black,Pawn false)]
+        White (3,3) (4,4)
+        [(4,4,White,Pawn false)]
+    ;
+
+    assert_legal_move
+        ~msg:"Eligibility removed after one move"
+        [(3,3,White,Pawn true) ; (4,5,Black,Pawn true) ; (7,1,Black,Knight)]
+        Black (7,1) (6,3)
+        [(3,3,White,Pawn false) ; (4,5,Black,Pawn false) ; (6,3,Black,Knight)]
+    ;
+
+    assert_illegal_move
+        ~msg:"No en passant capture when target is ineligible"
+        [(4,4,White,Pawn false); (4,3,Black,Pawn false)]
+        White (4,4) (5,3)
+    ;
+
+    assert_legal_move
+        ~msg:"White can capture en passant when the target is eligible"
+        [(4,4,White,Pawn false); (4,3,Black,Pawn true)]
+        White (4,4) (5,3)
+        [(5,3,White,Pawn false)]
+    ;
+
+    assert_legal_move
+        ~msg:"Black can capture en passant when the target is eligible"
+        [(3,4,Black,Pawn false); (3,3,White,Pawn true)]
+        Black (3,4) (2,3)
+        [(2,3,Black,Pawn false)]
+
 let suite =
  [
      "test basic motion">:: test_basic_motion;
      "test capturing">:: test_capturing;
+     "test en passant capturing">:: test_en_passant;
  ]

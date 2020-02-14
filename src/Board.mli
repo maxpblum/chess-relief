@@ -30,4 +30,6 @@ val to_matrix : t -> space_t array array
 type piece_on_board_t = {piece : piece_t ; location : location_t}
 val all_pieces_of_color : Color.t -> t -> piece_on_board_t list
 
+(* Iterate through all the spaces on a given board, combining into an
+ * accumulator of any type. *)
 val fold : ('a -> space_t -> location_t -> 'a) -> 'a -> t -> 'a

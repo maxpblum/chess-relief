@@ -73,8 +73,8 @@ let rec failed_condition move board cond =
 
 let realize_potential_move move board =
     let open Board in
+    let open Rank in
     let king_and_rook_marked_board = (
-        let open Rank in
         match get_value_at move.from board with
         | None -> board
         | Some piece -> match piece with
@@ -85,12 +85,23 @@ let realize_potential_move move board =
         | _ -> board
     )
     in
-    (* TODO: Make this check for Pawn true and convert to Pawn false *)
-    let pawn_marked_board = king_and_rook_marked_board in
+    let mark_false_if_pawn board (space:space_t) location = match space with
+    | Some {rank=Pawn true;color} -> set_location location (Some {rank=Pawn false;color}) board
+    | _ -> board
+    in
+    (* Use the board fold function to iterate through the spaces on the existing
+     * board, building up a newly marked version of the board. We pass in the same
+     * board argument twice since fold doesn't know we're using the board as our
+     * accumulator. *)
+    let pawn_marked_board =
+            Board.fold
+                mark_false_if_pawn
+                king_and_rook_marked_board
+                king_and_rook_marked_board
+    in
     let open PotentialMove in
     function
-    (* TODO: Make a special move type for pawn jump that creates Pawn true *)
-    | NormalMove -> make_move move marked_board
+    | NormalMove -> make_move move pawn_marked_board
     | EnPassant -> (
         let captured_pawn_row =
             (* Capturing a black pawn that just jumped to row four. *)
@@ -102,11 +113,20 @@ let realize_potential_move move board =
             row=captured_pawn_row ;
             col=move.destination.col ;
         } in
-        marked_board |>
+        pawn_marked_board |>
         make_move move |>
         set_location captured_pawn_spot None
     )
-    | _ -> initial
+    | PawnJump -> (
+        match (pawn_marked_board |> get_value_at move.from) with
+        (* Should not be possible *)
+        | None -> Board.initial
+        | Some {color} ->
+            make_move move pawn_marked_board |>
+            set_location move.destination (Some {color;rank=Pawn true})
+    )
+    | Castling -> Board.initial
+    | PawnExchange -> Board.initial
 
 let attempt_potential_move board from potential_move =
     let open PotentialMove in
@@ -171,7 +191,6 @@ let is_in_check color board =
     match king_location color board with
     (* This shouldn't happen, but let's say there's no check without a king *)
     | None -> false
-    (* TODO: Fix check check *)
     | Some spot -> is_threatened_by (Color.opposite color) board spot
 
 let attempt_move move state =

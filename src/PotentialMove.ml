@@ -3,6 +3,7 @@ type special_move_t =
     | Castling
     | PawnExchange
     | EnPassant
+    | PawnJump
 
 type condition_t =
     | TrueCondition
@@ -164,21 +165,24 @@ let rook_moves : t list = straight_moves
 
 let make_pawn_moves direction starting_row : t list =
     let open Board in
+    let next_square_empty = SpaceEmpty {rows=direction;cols=0} in
+    let second_square_empty = SpaceEmpty {rows=2*direction ; cols=0} in
     let simple_moves = (
-        let next_square_empty = SpaceEmpty {rows=direction;cols=0} in
-        let second_square_empty = SpaceEmpty {rows=2*direction ; cols=0} in
         [
             (direction,        0, next_square_empty) ;
-            (2 * direction,    0, AllOf [
-                next_square_empty;
-                second_square_empty;
-                StartingRowIs starting_row;
-            ]) ;
             (direction,     (-1), SpaceOccupied {rows=direction;cols=(-1)}) ;
             (direction,        1, SpaceOccupied {rows=direction;cols=1}) ;
         ] |>
         List.map make_normal_move
     ) in
+    let jump = {
+        (make_normal_move (
+            2 * direction, 0, AllOf [
+                next_square_empty;
+                second_square_empty;
+                StartingRowIs starting_row;
+        ])) with special_move_type = PawnJump
+    } in
     let make_en_passant col_direction =
         let diagonal_normal_move =
             make_normal_move (direction, col_direction, TrueCondition) in
@@ -195,7 +199,7 @@ let make_pawn_moves direction starting_row : t list =
             ]
         }
     in
-    List.concat [simple_moves ; [make_en_passant 1 ; make_en_passant (-1)]]
+    List.concat [simple_moves ; [jump ; make_en_passant 1 ; make_en_passant (-1)]]
 
 let white_pawn_moves : t list = make_pawn_moves 1    1
 let black_pawn_moves : t list = make_pawn_moves (-1) 6
