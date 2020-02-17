@@ -271,28 +271,33 @@ type game_ended_t =
     | Checkmate of Color.t
     | Stalemate
 
-let has_moves state =
+let all_moves state =
     let {board;turn} = state in
     let open Board in
     let open Rank in
     let open PotentialMove in
-    all_pieces_of_color turn board |>
-    find_bool (
-        fun {piece;location} ->
-            PotentialMove.get_for_piece piece |>
-            find_bool (
-                fun {delta} ->
-                    let move = { (move_of_delta delta location)
-                                 (* Always specify the optional replacement
-                                  * so that potential pawn-exchange moves
-                                  * will be recognized as legal. *)
-                                 with replacement=Some Queen } in
-                    match attempt_move move state with
-                    | Legal _ -> true
-                    | Illegal _ -> false
-            )
-    )
+    all_pieces_of_color turn board
+    |> List.map
+        (fun {piece;location} ->
+            PotentialMove.get_for_piece piece
+            |> List.map
+                (fun {delta} ->
+                    { (move_of_delta delta location)
+                      (* Always specify the optional replacement
+                       * so that potential pawn-exchange moves
+                       * will be recognized as legal. *)
+                       with replacement=Some Queen }
+                )
+        )
+    |> List.concat
+    |> List.filter
+        (fun move ->
+            match attempt_move move state with
+            | Legal _ -> true
+            | Illegal _ -> false
+        )
 
+let has_moves state = List.length (all_moves state) > 0
 
 let game_ended state =
     let has_moves = has_moves state in
