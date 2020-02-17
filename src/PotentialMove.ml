@@ -1,12 +1,5 @@
-type special_move_t =
-    | NormalMove
-    | Castling
-    | PawnExchange
-    | EnPassant
-    | PawnJump
-
 type t = {
-    special_move_type : special_move_t;
+    mechanics: MoveMechanics.t;
     delta : Board.delta_t;
     condition : Condition.t;
 }
@@ -22,7 +15,7 @@ let apply_universal_conditions move =
 (* Convenient constructor for making a "normal" PotentialMove from shorthand. *)
 let make_normal_move (rows,cols,condition) =
     let open Board in {
-        special_move_type = NormalMove;
+        mechanics = MoveMechanics.NormalMove;
         delta={rows;cols};
         condition;
     } |> apply_universal_conditions
@@ -111,7 +104,7 @@ let move_of_delta_set ((rows,cols),intermediates) =
         intermediates |>
         List.map (fun (rows,cols) -> SpaceEmpty {rows;cols})
     in {
-        special_move_type = NormalMove ;
+        mechanics = MoveMechanics.NormalMove ;
         delta={rows;cols} ;
         condition = AllOf empty_intermediate_conditions ;
     } |> apply_universal_conditions
@@ -160,14 +153,16 @@ let make_pawn_moves direction starting_row : t list =
     let exchange_moves =
         simple_moves |>
         List.map (require_condition (AllOf [MovingToEndRow ; MoveSpecifiesReplacement])) |>
-        List.map (fun pm -> { pm with special_move_type = PawnExchange }) in
+        List.map (fun pm -> {
+            pm with mechanics = MoveMechanics.PawnExchange
+        }) in
     let jump = {
         (make_normal_move (
             2 * direction, 0, AllOf [
                 next_square_empty;
                 second_square_empty;
                 StartingRowIs starting_row;
-        ])) with special_move_type = PawnJump
+        ])) with mechanics = MoveMechanics.PawnJump
     } in
     let make_en_passant col_direction =
         let diagonal_normal_move =
@@ -175,7 +170,7 @@ let make_pawn_moves direction starting_row : t list =
         {
             diagonal_normal_move
             with
-            special_move_type=EnPassant ;
+            mechanics=MoveMechanics.EnPassant ;
             condition=AllOf [
                 diagonal_normal_move.condition ;
                 (* There must be a just-jumped pawn in the same row
@@ -213,7 +208,7 @@ let king_side_castle =
         SpaceNotThreatened {rows=0;cols=1} ;
         PieceHasNotMoved {rows=0;cols=0} ;
         PieceHasNotMoved {rows=0;cols=3} ;
-    ])) with special_move_type=Castling}
+    ])) with mechanics=MoveMechanics.Castling}
 
 let queen_side_castle =
     let open Board in
@@ -225,7 +220,7 @@ let queen_side_castle =
         SpaceNotThreatened {rows=0;cols=(-1)} ;
         PieceHasNotMoved {rows=0;cols=0} ;
         PieceHasNotMoved {rows=0;cols=(-4)} ;
-    ])) with special_move_type=Castling}
+    ])) with mechanics=MoveMechanics.Castling}
 
 let king_moves = List.concat [basic_king_moves ; [king_side_castle ; queen_side_castle]]
 

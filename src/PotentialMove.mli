@@ -1,12 +1,5 @@
-type special_move_t =
-    | NormalMove
-    | Castling
-    | PawnExchange
-    | EnPassant
-    | PawnJump
-
 type t = {
-    special_move_type : special_move_t;
+    mechanics : MoveMechanics.t;
     delta : Board.delta_t;
     condition : Condition.t;
 }
