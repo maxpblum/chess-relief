@@ -3,8 +3,6 @@ type t = {
     turn : Color.t;
 }
 
-let find_bool f xs = List.find_opt f xs |> function | Some _ -> true | None -> false
-
 type possible_threat_t =
     | NonThreat of IllegalMoveReason.t
     | Threat of Board.t
