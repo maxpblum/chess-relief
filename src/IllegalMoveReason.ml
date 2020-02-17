@@ -7,7 +7,7 @@ type t =
     | MovingIntoCheck
     | CastlingOutOfCheck
     | CastlingThroughCheck
-    | FailedCondition of PotentialMove.condition_t
+    | FailedCondition of Condition.t
 
 let to_string = function
     | FromEmpty -> "Trying to move from an empty square."

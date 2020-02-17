@@ -5,58 +5,14 @@ type special_move_t =
     | EnPassant
     | PawnJump
 
-type condition_t =
-    | TrueCondition
-
-    (* All of the subconditions must be met. *)
-    | AllOf of condition_t list
-
-    (* Any one of the subconditions must be met. *)
-    | AnyOf of condition_t list
-
-    (* The destination must not contain a piece of the origin's color. *)
-    | NotCapturingOwnPiece
-
-    (* The destination must be on the board. *)
-    | DestinationOnBoard
-
-    (* A particular space must be empty, expressed relative to the origin. *)
-    | SpaceEmpty of Board.delta_t
-
-    (* A particular space must not be empty, expressed, relative to the origin. *)
-    | SpaceOccupied of Board.delta_t
-
-    (* The piece must be moving from a specific row. *)
-    | StartingRowIs of int
-
-    (* The space expressed relative to origin must contain a pawn that just jumped there. *)
-    | EnPassantCapturable of Board.delta_t
-
-    (* The destination is not in row 0 or 7. *)
-    | NotMovingToEndRow
-
-    (* The destination is in row 0 or 7. *)
-    | MovingToEndRow
-
-    (* The move object must specify a replacement rank (for pawn exchange). *)
-    | MoveSpecifiesReplacement
-
-    (* The space expressed relative to origin must not be threatened by the
-     * other team (the team for which we are not currently evaluating a
-     * potential move. *)
-    | SpaceNotThreatened of Board.delta_t
-
-    (* The space expressed relative to origin must contain a king or rook that
-     * has not moved yet during this game. *)
-    | PieceHasNotMoved of Board.delta_t
-
 type t = {
     special_move_type : special_move_t;
     delta : Board.delta_t;
-    condition : condition_t;
+    condition : Condition.t;
 }
 
 let apply_universal_conditions move =
+    let open Condition in
     {move with condition=(AllOf [
         DestinationOnBoard;
         NotCapturingOwnPiece;
@@ -72,7 +28,7 @@ let make_normal_move (rows,cols,condition) =
     } |> apply_universal_conditions
 
 let knight_moves = [1,2 ; 1,-2 ; -1,2 ; -1,-2 ; 2,1 ; 2,-1 ; -2,1 ; -2,-1]
-    |> List.map (fun (a,b) -> (a,b,TrueCondition))
+    |> List.map (fun (a,b) -> (a,b,Condition.True))
     |> List.map make_normal_move
 
 (* range 5 10 => [5;6;7;8;9] *)
@@ -150,6 +106,7 @@ let back_right : delta_set_t list = forward_left |> reverse_rows |> reverse_cols
  *)
 let move_of_delta_set ((rows,cols),intermediates) =
     let open Board in
+    let open Condition in
     let empty_intermediate_conditions =
         intermediates |>
         List.map (fun (rows,cols) -> SpaceEmpty {rows;cols})
@@ -181,12 +138,13 @@ let bishop_moves : t list = diagonal_moves
 let queen_moves : t list = List.concat [diagonal_moves ; straight_moves]
 let rook_moves : t list = straight_moves
 
-let require_condition cond pm = {
+let require_condition cond pm = Condition.{
     pm with condition = AllOf [ pm.condition ; cond ]
 }
 
 let make_pawn_moves direction starting_row : t list =
     let open Board in
+    let open Condition in
     let next_square_empty = SpaceEmpty {rows=direction;cols=0} in
     let second_square_empty = SpaceEmpty {rows=2*direction ; cols=0} in
     let simple_moves = (
@@ -213,7 +171,7 @@ let make_pawn_moves direction starting_row : t list =
     } in
     let make_en_passant col_direction =
         let diagonal_normal_move =
-            make_normal_move (direction, col_direction, TrueCondition) in
+            make_normal_move (direction, col_direction, True) in
         {
             diagonal_normal_move
             with
@@ -241,10 +199,14 @@ let basic_king_moves = [
     (1,(-1)) ;
     ((-1),1) ;
     ((-1),(-1)) ;
-] |> List.map (fun (rows,cols) -> make_normal_move (rows,cols,TrueCondition))
+] |> List.map (
+    fun (rows,cols) ->
+        make_normal_move (rows,cols,Condition.True)
+)
 
 let king_side_castle =
     let open Board in
+    let open Condition in
     {(make_normal_move (0,2,AllOf [
         SpaceEmpty {rows=0;cols=1} ;
         SpaceEmpty {rows=0;cols=2} ;
@@ -255,6 +217,7 @@ let king_side_castle =
 
 let queen_side_castle =
     let open Board in
+    let open Condition in
     {(make_normal_move (0,(-2),AllOf [
         SpaceEmpty {rows=0;cols=(-1)} ;
         SpaceEmpty {rows=0;cols=(-2)} ;

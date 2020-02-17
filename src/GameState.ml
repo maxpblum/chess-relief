@@ -117,6 +117,7 @@ let realize_potential_move move board =
 let rec failed_condition move board cond =
     let open Rank in
     let open Board in
+    let open Condition in
     let {from;destination} = move in
     let open PotentialMove in
     let all_true = function
@@ -141,7 +142,7 @@ let rec failed_condition move board cond =
     in
     let wrap_bool b = if b then None else Some cond in
     match cond with
-    | TrueCondition -> None
+    | True -> None
     | AllOf subconditions -> all_true subconditions
     | AnyOf subconditions -> any_true subconditions
     | NotCapturingOwnPiece -> (

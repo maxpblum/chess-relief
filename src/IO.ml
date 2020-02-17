@@ -121,7 +121,7 @@ let rec play_game (state : GameState.t) =
     let () = String.concat "" [(Color.to_string turn); " to move"] |> print_endline in
     let move_getter =
         if state.turn = Color.White
-        then get_human_move
+        then get_random_move
         else get_random_move
     in
     let move = move_getter state in
