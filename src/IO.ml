@@ -97,14 +97,18 @@ let string_of_board invert board =
     row_strings_list_impl invert 0 [reset_background] board |>
     String.concat "\n"
 
-let rec get_human_move _ =
+let rec get_human_move state =
     let () = print_string "Enter a move: " in
     let parsed_move = read_line () |> parse_move in
     match parsed_move with
     | UnparseableMove ->
         let () = print_endline "Move not parseable." in
-        get_human_move ()
+        get_human_move state
     | ParsedMove move -> move
+
+let get_random_move state =
+    let moves = GameState.all_moves state in
+    List.nth moves (Random.int (List.length moves))
 
 let rec play_game (state : GameState.t) =
     let open GameState in
@@ -115,7 +119,12 @@ let rec play_game (state : GameState.t) =
     let {board;turn} : GameState.t = state in
     let () = print_string (string_of_board false board) in
     let () = String.concat "" [(Color.to_string turn); " to move"] |> print_endline in
-    let move = get_human_move () in
+    let move_getter =
+        if state.turn = Color.White
+        then get_human_move
+        else get_random_move
+    in
+    let move = move_getter state in
     match attempt_move move state with
     | Illegal reason -> (
         let () = IllegalMoveReason.to_string reason |> print_endline in

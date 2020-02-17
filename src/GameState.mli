@@ -17,3 +17,4 @@ val initial : t
 val is_in_check : Color.t -> Board.t -> bool
 val attempt_move : Board.move_t -> t -> attempted_move_t
 val game_ended : t -> game_ended_t
+val all_moves : t -> Board.move_t list
