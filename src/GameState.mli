@@ -2,9 +2,13 @@ type t = {
     board : Board.t;
     turn : Color.t;
 }
+
+(* Whether a given move is mechanically possible. *)
 type possible_threat_t =
     | NonThreat of IllegalMoveReason.t
+    (* The resulting board, if the move is mechanically possible. *)
     | Threat of Board.t
+
 type attempted_move_t =
     | Illegal of IllegalMoveReason.t
     | Legal   of t
