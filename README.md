@@ -9,4 +9,4 @@ chmod +x ./run.sh
 
 ## Dependencies
 
-This should be run in a Bash shell, since it uses Bash color manipulation to print the board. It also requires `ocamlopt`, which comes by default with [opam](https://opam.ocaml.org) (follow link for installation instructions).
+This should be run in a Bash shell, since it uses Bash color manipulation to print the board. It also requires `ocamlopt`, which can be install with [opam](https://opam.ocaml.org) (follow link for installation instructions).
